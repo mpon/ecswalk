@@ -29,20 +29,14 @@ import (
 // clustersCmd represents the clusters command
 var clustersCmd = &cobra.Command{
 	Use:   "clusters",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "get ECS clusters",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("clusters called")
+		fmt.Println("get ecs clusters")
 	},
 }
 
 func init() {
-	get.AddCommand(clustersCmd)
+	getCmd.AddCommand(clustersCmd)
 
 	// Here you will define your flags and configuration settings.
 
