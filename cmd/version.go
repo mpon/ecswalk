@@ -29,10 +29,9 @@ import (
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version number of ecs2k8s",
-	Long:  `Print the version number of ecs2k8s`,
+	Short: "Print the version number of ecsctl",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("ecs2k8s version 0.0.1")
+		fmt.Println("ecsctl version 0.0.1")
 	},
 }
 

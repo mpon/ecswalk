@@ -20,7 +20,7 @@
 
 package main
 
-import "github.com/mpon/ecs2k8s/cmd"
+import "github.com/mpon/ecsctl/cmd"
 
 func main() {
 	cmd.Execute()
