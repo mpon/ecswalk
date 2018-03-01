@@ -64,7 +64,9 @@ var clustersCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(result)
+		for _, arn := range result.ClusterArns {
+			fmt.Println(arn)
+		}
 	},
 }
 
