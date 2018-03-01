@@ -26,23 +26,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var cluster string
+
 // servicesCmd represents the services command
 var servicesCmd = &cobra.Command{
 	Use:   "services",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "get all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("services called")
+		fmt.Printf("get all services of %s\n", cluster)
 	},
 }
 
 func init() {
 	getCmd.AddCommand(servicesCmd)
+	servicesCmd.Flags().StringVarP(&cluster, "cluster", "c", "", "AWS ECS cluster)")
+	servicesCmd.MarkFlagRequired("cluster")
 
 	// Here you will define your flags and configuration settings.
 
