@@ -23,35 +23,59 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/spf13/cobra"
 )
 
 var cluster string
+var services []string
 
 // servicesCmd represents the services command
 var servicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "get all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		listServices()
+		svc := newSvc()
+		p := params{
+			svc: svc,
+		}
+		listServices(p)
+		for _, s := range services {
+			fmt.Println(s)
+		}
 	},
 }
 
-func listServices() {
+func newSvc() *ecs.ECS {
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
 		panic("failed to load config, " + err.Error())
 	}
-	svc := ecs.New(cfg)
+	return ecs.New(cfg)
+}
+
+type params struct {
+	svc       *ecs.ECS
+	nextToken *string
+}
+
+func listServices(p params) {
+
 	input := &ecs.ListServicesInput{
 		Cluster: aws.String(cluster),
 	}
 
-	req := svc.ListServicesRequest(input)
+	if p.nextToken != nil {
+		input = &ecs.ListServicesInput{
+			Cluster:   aws.String(cluster),
+			NextToken: p.nextToken,
+		}
+	}
+
+	req := p.svc.ListServicesRequest(input)
 	result, err := req.Send()
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -75,9 +99,16 @@ func listServices() {
 		return
 	}
 
-	fmt.Println(result.NextToken)
 	for _, arn := range result.ServiceArns {
-		fmt.Println(arn)
+		services = append(services, arn)
+	}
+
+	if result.NextToken != nil {
+		nextParam := params{
+			svc:       p.svc,
+			nextToken: result.NextToken,
+		}
+		listServices(nextParam)
 	}
 }
 
