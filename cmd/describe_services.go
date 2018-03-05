@@ -30,31 +30,47 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var describedCluster string
-var describedServices []string
+var describeServicesCmdFlagCluster string
 
 // servicesCmd represents the services command
 var describeServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "describe all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		svc := awsecs.NewSvc()
-		p := describeParams{
-			svc: svc,
+		services := awsecs.ListServices(describeServicesCmdFlagCluster)
+
+		chunked := [][]string{}
+		maxAPILimitChunkSize := 10
+		for i := 0; i < len(services); i += maxAPILimitChunkSize {
+			end := i + maxAPILimitChunkSize
+
+			if end > len(services) {
+				end = len(services)
+			}
+
+			chunked = append(chunked, services[i:end])
 		}
-		describeServices(p)
+		svc := awsecs.NewSvc()
+		for _, c := range chunked {
+			p := describeParams{
+				svc:      svc,
+				services: c,
+			}
+			describeServices(p)
+		}
 	},
 }
 
 type describeParams struct {
-	svc *ecs.ECS
+	svc      *ecs.ECS
+	services []string
 }
 
 func describeServices(p describeParams) {
 
 	input := &ecs.DescribeServicesInput{
-		Cluster:  aws.String(describedCluster),
-		Services: describedServices,
+		Cluster:  aws.String(describeServicesCmdFlagCluster),
+		Services: p.services,
 	}
 
 	req := p.svc.DescribeServicesRequest(input)
@@ -81,12 +97,14 @@ func describeServices(p describeParams) {
 		return
 	}
 
-	fmt.Println(*result.Services[0].TaskDefinition)
+	for _, s := range result.Services {
+		fmt.Println(*s.TaskDefinition)
+	}
 }
 
 func init() {
 	describeCmd.AddCommand(describeServicesCmd)
-	describeServicesCmd.Flags().StringVarP(&describedCluster, "cluster", "c", "", "AWS ECS cluster)")
+	describeServicesCmd.Flags().StringVarP(&describeServicesCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster)")
 	describeServicesCmd.MarkFlagRequired("cluster")
 
 	// Here you will define your flags and configuration settings.

@@ -27,14 +27,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cluster string
+var getServicesCmdFlagCluster string
 
 // servicesCmd represents the services command
 var getServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "get all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		services := awsecs.ListServices(cluster)
+		services := awsecs.ListServices(getServicesCmdFlagCluster)
 		for _, s := range services {
 			fmt.Println(s)
 		}
@@ -43,7 +43,7 @@ var getServicesCmd = &cobra.Command{
 
 func init() {
 	getCmd.AddCommand(getServicesCmd)
-	getServicesCmd.Flags().StringVarP(&cluster, "cluster", "c", "", "AWS ECS cluster)")
+	getServicesCmd.Flags().StringVarP(&getServicesCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster)")
 	getServicesCmd.MarkFlagRequired("cluster")
 
 	// Here you will define your flags and configuration settings.
