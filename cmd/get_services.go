@@ -23,85 +23,22 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/awserr"
-	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
 )
 
 var cluster string
-var services []string
 
 // servicesCmd represents the services command
 var getServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "get all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		svc := awsecs.NewSvc()
-		p := params{
-			svc: svc,
-		}
-		listServices(p)
+		services := awsecs.ListServices(cluster)
 		for _, s := range services {
 			fmt.Println(s)
 		}
 	},
-}
-
-type params struct {
-	svc       *ecs.ECS
-	nextToken *string
-}
-
-func listServices(p params) {
-
-	input := &ecs.ListServicesInput{
-		Cluster: aws.String(cluster),
-	}
-
-	if p.nextToken != nil {
-		input = &ecs.ListServicesInput{
-			Cluster:   aws.String(cluster),
-			NextToken: p.nextToken,
-		}
-	}
-
-	req := p.svc.ListServicesRequest(input)
-	result, err := req.Send()
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case ecs.ErrCodeServerException:
-				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
-			case ecs.ErrCodeInvalidParameterException:
-				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
-			case ecs.ErrCodeClusterNotFoundException:
-				fmt.Println(ecs.ErrCodeClusterNotFoundException, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
-		return
-	}
-
-	for _, arn := range result.ServiceArns {
-		services = append(services, arn)
-	}
-
-	if result.NextToken != nil {
-		nextParam := params{
-			svc:       p.svc,
-			nextToken: result.NextToken,
-		}
-		listServices(nextParam)
-	}
 }
 
 func init() {

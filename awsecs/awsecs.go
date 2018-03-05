@@ -21,8 +21,13 @@
 package awsecs
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
 // NewSvc creates AWS client for ECS
@@ -32,4 +37,70 @@ func NewSvc() *ecs.ECS {
 		panic("failed to load config, " + err.Error())
 	}
 	return ecs.New(cfg)
+}
+
+// ListServices ECS Service recursively
+func ListServices(cluster string) []string {
+
+	svc := NewSvc()
+	outputs, err := listServices(cluster, svc, nil, nil)
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case ecs.ErrCodeServerException:
+				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
+			case ecs.ErrCodeClientException:
+				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeInvalidParameterException:
+				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
+			case ecs.ErrCodeClusterNotFoundException:
+				fmt.Println(ecs.ErrCodeClusterNotFoundException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return nil
+	}
+
+	names := []string{}
+	for _, output := range outputs {
+		for _, arn := range output.ServiceArns {
+			s := strings.Split(arn, "/")
+			names = append(names, s[len(s)-1])
+		}
+	}
+
+	return names
+}
+
+func listServices(cluster string, svc *ecs.ECS, nextToken *string, outputs []*ecs.ListServicesOutput) ([]*ecs.ListServicesOutput, error) {
+	input := &ecs.ListServicesInput{
+		Cluster: aws.String(cluster),
+	}
+
+	if nextToken != nil {
+		input = &ecs.ListServicesInput{
+			Cluster:   aws.String(cluster),
+			NextToken: nextToken,
+		}
+	}
+
+	req := svc.ListServicesRequest(input)
+	result, err := req.Send()
+
+	if err != nil {
+		return nil, err
+	}
+
+	outputs = append(outputs, result)
+
+	if result.NextToken != nil {
+		return listServices(cluster, svc, result.NextToken, outputs)
+	}
+	return outputs, nil
 }
