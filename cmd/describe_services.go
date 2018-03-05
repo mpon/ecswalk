@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
@@ -50,10 +51,18 @@ var describeServicesCmd = &cobra.Command{
 
 		taskDefinitions := []string{}
 
+		wg := &sync.WaitGroup{}
+
 		for _, c := range chunked {
-			ts := awsecs.DescribeServices(describeServicesCmdFlagCluster, c)
-			taskDefinitions = append(taskDefinitions, ts...)
+			wg.Add(1)
+			go func(c []string) {
+				defer wg.Done()
+				ts := awsecs.DescribeServices(describeServicesCmdFlagCluster, c)
+				taskDefinitions = append(taskDefinitions, ts...)
+			}(c)
 		}
+
+		wg.Wait()
 
 		for _, t := range taskDefinitions {
 			fmt.Println(t)
