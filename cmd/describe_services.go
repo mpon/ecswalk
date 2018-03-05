@@ -30,44 +30,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cluster string
-var services []string
+var describedCluster string
+var describedServices []string
 
 // servicesCmd represents the services command
-var getServicesCmd = &cobra.Command{
+var describeServicesCmd = &cobra.Command{
 	Use:   "services",
-	Short: "get all ECS services specified cluster",
+	Short: "describe all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		svc := awsecs.NewSvc()
-		p := params{
+		p := describeParams{
 			svc: svc,
 		}
-		listServices(p)
-		for _, s := range services {
-			fmt.Println(s)
-		}
+		describeServices(p)
 	},
 }
 
-type params struct {
-	svc       *ecs.ECS
-	nextToken *string
+type describeParams struct {
+	svc *ecs.ECS
 }
 
-func listServices(p params) {
+func describeServices(p describeParams) {
 
-	input := &ecs.ListServicesInput{
-		Cluster: aws.String(cluster),
+	input := &ecs.DescribeServicesInput{
+		Cluster:  aws.String(describedCluster),
+		Services: describedServices,
 	}
 
-	if p.nextToken != nil {
-		input = &ecs.ListServicesInput{
-			Cluster:   aws.String(cluster),
-			NextToken: p.nextToken,
-		}
-	}
-
-	req := p.svc.ListServicesRequest(input)
+	req := p.svc.DescribeServicesRequest(input)
 	result, err := req.Send()
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -91,23 +81,13 @@ func listServices(p params) {
 		return
 	}
 
-	for _, arn := range result.ServiceArns {
-		services = append(services, arn)
-	}
-
-	if result.NextToken != nil {
-		nextParam := params{
-			svc:       p.svc,
-			nextToken: result.NextToken,
-		}
-		listServices(nextParam)
-	}
+	fmt.Println(*result.Services[0].TaskDefinition)
 }
 
 func init() {
-	getCmd.AddCommand(getServicesCmd)
-	getServicesCmd.Flags().StringVarP(&cluster, "cluster", "c", "", "AWS ECS cluster)")
-	getServicesCmd.MarkFlagRequired("cluster")
+	describeCmd.AddCommand(describeServicesCmd)
+	describeServicesCmd.Flags().StringVarP(&describedCluster, "cluster", "c", "", "AWS ECS cluster)")
+	describeServicesCmd.MarkFlagRequired("cluster")
 
 	// Here you will define your flags and configuration settings.
 

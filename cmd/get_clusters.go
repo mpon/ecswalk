@@ -23,14 +23,15 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/spf13/cobra"
+
+	"github.com/mpon/ecsctl/awsecs"
 )
 
 // clustersCmd represents the clusters command
-var clustersCmd = &cobra.Command{
+var getClustersCmd = &cobra.Command{
 	Use:   "clusters",
 	Short: "get ECS clusters",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -39,12 +40,7 @@ var clustersCmd = &cobra.Command{
 }
 
 func listClusters() {
-	cfg, err := external.LoadDefaultAWSConfig()
-	if err != nil {
-		panic("failed to load config, " + err.Error())
-	}
-
-	svc := ecs.New(cfg)
+	svc := awsecs.NewSvc()
 	input := &ecs.ListClustersInput{}
 
 	req := svc.ListClustersRequest(input)
@@ -75,7 +71,7 @@ func listClusters() {
 }
 
 func init() {
-	getCmd.AddCommand(clustersCmd)
+	getCmd.AddCommand(getClustersCmd)
 
 	// Here you will define your flags and configuration settings.
 
