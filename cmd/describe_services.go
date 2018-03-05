@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/mpon/ecsctl/awsecs"
@@ -38,6 +39,7 @@ var describeServicesCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		maxAPILimitChunkSize := 10
 		taskDefinitions := []string{}
+		outputs := []string{}
 
 		services := awsecs.ListServices(describeServicesCmdFlagCluster)
 
@@ -53,8 +55,20 @@ var describeServicesCmd = &cobra.Command{
 		wg.Wait()
 
 		for _, t := range taskDefinitions {
-			fmt.Println(t)
+			wg.Add(1)
+			go func(t string) {
+				defer wg.Done()
+				outputs = append(outputs, awsecs.DescribeTaskDefinition(t)...)
+			}(t)
 		}
+		wg.Wait()
+
+		sort.Strings(outputs)
+
+		for _, o := range outputs {
+			fmt.Println(o)
+		}
+
 	},
 }
 

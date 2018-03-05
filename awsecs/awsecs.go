@@ -146,6 +146,48 @@ func DescribeServices(cluster string, services []string) []string {
 	return taskDefinitions
 }
 
+// DescribeTaskDefinition describe specified task definition
+func DescribeTaskDefinition(taskDefinitionArn string) []string {
+	svc := newSvc()
+	input := &ecs.DescribeTaskDefinitionInput{
+		TaskDefinition: aws.String(taskDefinitionArn),
+	}
+
+	req := svc.DescribeTaskDefinitionRequest(input)
+	result, err := req.Send()
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case ecs.ErrCodeServerException:
+				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
+			case ecs.ErrCodeClientException:
+				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeInvalidParameterException:
+				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return nil
+	}
+
+	images := []string{}
+	for _, c := range result.TaskDefinition.ContainerDefinitions {
+		t := strings.Split(taskDefinitionArn, "/")
+		fmt.Print(t[len(t)-1])
+		fmt.Print(" => ")
+		s := strings.Split(*c.Image, "/")
+		fmt.Println(s[len(s)-1])
+		r := fmt.Sprintf("%s => %s", t[len(t)-1], s[len(s)-1])
+		images = append(images, r)
+	}
+	return images
+}
+
 func newSvc() *ecs.ECS {
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
