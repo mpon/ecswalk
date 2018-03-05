@@ -23,11 +23,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws/awserr"
-	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/spf13/cobra"
-
 	"github.com/mpon/ecsctl/awsecs"
+	"github.com/spf13/cobra"
 )
 
 // clustersCmd represents the clusters command
@@ -35,39 +32,12 @@ var getClustersCmd = &cobra.Command{
 	Use:   "clusters",
 	Short: "get ECS clusters",
 	Run: func(cmd *cobra.Command, args []string) {
-		listClusters()
-	},
-}
+		clusters := awsecs.ListClusters()
 
-func listClusters() {
-	svc := awsecs.NewSvc()
-	input := &ecs.ListClustersInput{}
-
-	req := svc.ListClustersRequest(input)
-	result, err := req.Send()
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case ecs.ErrCodeServerException:
-				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
-			case ecs.ErrCodeInvalidParameterException:
-				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
+		for _, cluster := range clusters {
+			fmt.Println(cluster)
 		}
-		return
-	}
-
-	for _, arn := range result.ClusterArns {
-		fmt.Println(arn)
-	}
+	},
 }
 
 func init() {

@@ -39,7 +39,43 @@ func NewSvc() *ecs.ECS {
 	return ecs.New(cfg)
 }
 
-// ListServices ECS Service recursively
+// ListClusters  ist ECS clusters
+func ListClusters() []string {
+	svc := NewSvc()
+	input := &ecs.ListClustersInput{}
+
+	req := svc.ListClustersRequest(input)
+	result, err := req.Send()
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case ecs.ErrCodeServerException:
+				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
+			case ecs.ErrCodeClientException:
+				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeInvalidParameterException:
+				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return nil
+	}
+
+	names := []string{}
+	for _, arn := range result.ClusterArns {
+		s := strings.Split(arn, "/")
+		names = append(names, s[len(s)-1])
+	}
+
+	return names
+}
+
+// ListServices list ECS Service recursively
 func ListServices(cluster string) []string {
 
 	svc := NewSvc()
