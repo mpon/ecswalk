@@ -178,10 +178,7 @@ func DescribeTaskDefinition(taskDefinitionArn string) []string {
 	images := []string{}
 	for _, c := range result.TaskDefinition.ContainerDefinitions {
 		t := strings.Split(taskDefinitionArn, "/")
-		fmt.Print(t[len(t)-1])
-		fmt.Print(" => ")
 		s := strings.Split(*c.Image, "/")
-		fmt.Println(s[len(s)-1])
 		r := fmt.Sprintf("%s => %s", t[len(t)-1], s[len(s)-1])
 		images = append(images, r)
 	}
