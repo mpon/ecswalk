@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/manifoldco/promptui"
+	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
 )
 
@@ -34,19 +35,18 @@ var walkCmd = &cobra.Command{
 	Short: "describe ECS services by selecting cluster interactively",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		items := []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+		clusters := awsecs.ListClusters()
 
 		searcher := func(input string, index int) bool {
-			item := strings.ToLower(items[index])
-			return strings.Contains(item, input)
+			cluster := strings.ToLower(clusters[index])
+			return strings.Contains(cluster, input)
 		}
 
 		prompt := promptui.Select{
-			Label:             "Select Day",
-			Items:             items,
-			Size:              10,
-			Searcher:          searcher,
-			StartInSearchMode: true,
+			Label:    "Select cluster",
+			Items:    clusters,
+			Size:     20,
+			Searcher: searcher,
 		}
 
 		_, result, err := prompt.Run()
