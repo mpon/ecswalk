@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -32,10 +33,20 @@ var walkCmd = &cobra.Command{
 	Use:   "walk",
 	Short: "describe ECS services by selecting cluster interactively",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		items := []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+
+		searcher := func(input string, index int) bool {
+			item := strings.ToLower(items[index])
+			return strings.Contains(item, input)
+		}
+
 		prompt := promptui.Select{
-			Label: "Select Day",
-			Items: []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
-				"Saturday", "Sunday"},
+			Label:             "Select Day",
+			Items:             items,
+			Size:              10,
+			Searcher:          searcher,
+			StartInSearchMode: true,
 		}
 
 		_, result, err := prompt.Run()
