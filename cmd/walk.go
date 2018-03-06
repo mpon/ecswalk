@@ -22,10 +22,13 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strings"
+	"sync"
 
 	"github.com/manifoldco/promptui"
 	"github.com/mpon/ecsctl/awsecs"
+	"github.com/mpon/ecsctl/sliceutil"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +37,9 @@ var walkCmd = &cobra.Command{
 	Use:   "walk",
 	Short: "describe ECS services by selecting cluster interactively",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		maxAPILimitChunkSize := 10
+		taskDefinitions := []string{}
+		outputs := []string{}
 		clusters := awsecs.ListClusters()
 
 		searcher := func(input string, index int) bool {
@@ -49,14 +54,40 @@ var walkCmd = &cobra.Command{
 			Searcher: searcher,
 		}
 
-		_, result, err := prompt.Run()
+		_, cluster, err := prompt.Run()
 
 		if err != nil {
 			fmt.Printf("Prompt failed %v\n", err)
 			return
 		}
 
-		fmt.Printf("You choose %q\n", result)
+		services := awsecs.ListServices(cluster)
+
+		wg := &sync.WaitGroup{}
+		for _, chunkedServices := range sliceutil.ChunkedSlice(services, maxAPILimitChunkSize) {
+			wg.Add(1)
+			go func(c []string) {
+				defer wg.Done()
+				ts := awsecs.DescribeServices(cluster, c)
+				taskDefinitions = append(taskDefinitions, ts...)
+			}(chunkedServices)
+		}
+		wg.Wait()
+
+		for _, t := range taskDefinitions {
+			wg.Add(1)
+			go func(t string) {
+				defer wg.Done()
+				outputs = append(outputs, awsecs.DescribeTaskDefinition(t)...)
+			}(t)
+		}
+		wg.Wait()
+
+		sort.Strings(outputs)
+
+		for _, o := range outputs {
+			fmt.Println(o)
+		}
 	},
 }
 
