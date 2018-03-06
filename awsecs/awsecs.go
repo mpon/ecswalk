@@ -22,12 +22,15 @@ package awsecs
 
 import (
 	"fmt"
+	"sort"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/mpon/ecsctl/sliceutil"
 )
 
 // ListClusters  ist ECS clusters
@@ -183,6 +186,36 @@ func DescribeTaskDefinition(taskDefinitionArn string) []string {
 		images = append(images, r)
 	}
 	return images
+}
+
+// DescribeTaskDefinitions describe with task definition about all services
+func DescribeTaskDefinitions(cluster string, services []string) []string {
+	maxAPILimitChunkSize := 10
+	taskDefinitions := []string{}
+	outputs := []string{}
+
+	wg := &sync.WaitGroup{}
+	for _, chunkedServices := range sliceutil.ChunkedSlice(services, maxAPILimitChunkSize) {
+		wg.Add(1)
+		go func(c []string) {
+			defer wg.Done()
+			ts := DescribeServices(cluster, c)
+			taskDefinitions = append(taskDefinitions, ts...)
+		}(chunkedServices)
+	}
+	wg.Wait()
+
+	for _, t := range taskDefinitions {
+		wg.Add(1)
+		go func(t string) {
+			defer wg.Done()
+			outputs = append(outputs, DescribeTaskDefinition(t)...)
+		}(t)
+	}
+	wg.Wait()
+
+	sort.Strings(outputs)
+	return outputs
 }
 
 func newSvc() *ecs.ECS {

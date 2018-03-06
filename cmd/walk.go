@@ -22,13 +22,10 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
 	"strings"
-	"sync"
 
 	"github.com/manifoldco/promptui"
 	"github.com/mpon/ecsctl/awsecs"
-	"github.com/mpon/ecsctl/sliceutil"
 	"github.com/spf13/cobra"
 )
 
@@ -37,58 +34,36 @@ var walkCmd = &cobra.Command{
 	Use:   "walk",
 	Short: "describe ECS services by selecting cluster interactively",
 	Run: func(cmd *cobra.Command, args []string) {
-		maxAPILimitChunkSize := 10
-		taskDefinitions := []string{}
-		outputs := []string{}
 		clusters := awsecs.ListClusters()
 
-		searcher := func(input string, index int) bool {
-			cluster := strings.ToLower(clusters[index])
-			return strings.Contains(cluster, input)
-		}
-
-		prompt := promptui.Select{
-			Label:    "Select cluster",
-			Items:    clusters,
-			Size:     20,
-			Searcher: searcher,
-		}
-
+		prompt := newPrompt(clusters)
 		_, cluster, err := prompt.Run()
-
 		if err != nil {
 			fmt.Printf("Prompt failed %v\n", err)
 			return
 		}
 
 		services := awsecs.ListServices(cluster)
-
-		wg := &sync.WaitGroup{}
-		for _, chunkedServices := range sliceutil.ChunkedSlice(services, maxAPILimitChunkSize) {
-			wg.Add(1)
-			go func(c []string) {
-				defer wg.Done()
-				ts := awsecs.DescribeServices(cluster, c)
-				taskDefinitions = append(taskDefinitions, ts...)
-			}(chunkedServices)
-		}
-		wg.Wait()
+		taskDefinitions := awsecs.DescribeTaskDefinitions(cluster, services)
 
 		for _, t := range taskDefinitions {
-			wg.Add(1)
-			go func(t string) {
-				defer wg.Done()
-				outputs = append(outputs, awsecs.DescribeTaskDefinition(t)...)
-			}(t)
-		}
-		wg.Wait()
-
-		sort.Strings(outputs)
-
-		for _, o := range outputs {
-			fmt.Println(o)
+			fmt.Println(t)
 		}
 	},
+}
+
+func newPrompt(clusters []string) promptui.Select {
+	searcher := func(input string, index int) bool {
+		cluster := strings.ToLower(clusters[index])
+		return strings.Contains(cluster, input)
+	}
+
+	return promptui.Select{
+		Label:    "Select cluster",
+		Items:    clusters,
+		Size:     20,
+		Searcher: searcher,
+	}
 }
 
 func init() {

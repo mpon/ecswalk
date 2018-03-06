@@ -22,11 +22,8 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
-	"sync"
 
 	"github.com/mpon/ecsctl/awsecs"
-	"github.com/mpon/ecsctl/sliceutil"
 	"github.com/spf13/cobra"
 )
 
@@ -37,38 +34,12 @@ var describeServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "describe all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		maxAPILimitChunkSize := 10
-		taskDefinitions := []string{}
-		outputs := []string{}
-
 		services := awsecs.ListServices(describeServicesCmdFlagCluster)
-
-		wg := &sync.WaitGroup{}
-		for _, chunkedServices := range sliceutil.ChunkedSlice(services, maxAPILimitChunkSize) {
-			wg.Add(1)
-			go func(c []string) {
-				defer wg.Done()
-				ts := awsecs.DescribeServices(describeServicesCmdFlagCluster, c)
-				taskDefinitions = append(taskDefinitions, ts...)
-			}(chunkedServices)
-		}
-		wg.Wait()
-
-		for _, t := range taskDefinitions {
-			wg.Add(1)
-			go func(t string) {
-				defer wg.Done()
-				outputs = append(outputs, awsecs.DescribeTaskDefinition(t)...)
-			}(t)
-		}
-		wg.Wait()
-
-		sort.Strings(outputs)
+		outputs := awsecs.DescribeTaskDefinitions(describeServicesCmdFlagCluster, services)
 
 		for _, o := range outputs {
 			fmt.Println(o)
 		}
-
 	},
 }
 
