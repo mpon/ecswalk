@@ -22,9 +22,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"sort"
-	"strings"
+	"text/tabwriter"
 
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
 )
@@ -36,32 +38,85 @@ var getServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "get all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		listServicesOutputs := awsecs.ListServices(getServicesCmdFlagCluster)
+		describeServicesOutputs := awsecs.DescribeAllServices(getServicesCmdFlagCluster)
+		services := []ecs.Service{}
 		serviceArns := []string{}
-		for _, listServiceOutput := range listServicesOutputs {
-			for _, serviceArn := range listServiceOutput.ServiceArns {
-				serviceArns = append(serviceArns, serviceArn)
+		for _, describeServiceOutput := range describeServicesOutputs {
+			for _, service := range describeServiceOutput.Services {
+				services = append(services, service)
+				serviceArns = append(serviceArns, *service.ServiceArn)
 			}
 		}
 		describeTaskDefinitionOutputs := awsecs.DescribeTaskDefinitions(getServicesCmdFlagCluster, serviceArns)
 
-		sortTaskDefinitions := []string{}
+		rows := GetServiceRows{}
 		for _, describeTaskDefinitionOutput := range describeTaskDefinitionOutputs {
-			names := strings.Split(*describeTaskDefinitionOutput.TaskDefinition.TaskDefinitionArn, "/")
-			for _, container := range describeTaskDefinitionOutput.TaskDefinition.ContainerDefinitions {
-				tdName := names[len(names)-1]
-				images := strings.Split(*container.Image, "/")
-				image := images[len(images)-1]
-				o := fmt.Sprintf("%s => %s", tdName, image)
-				sortTaskDefinitions = append(sortTaskDefinitions, o)
+			taskDefinition := *describeTaskDefinitionOutput.TaskDefinition.TaskDefinitionArn
+			service := findService(services, taskDefinition)
+
+			for _, containerDefinition := range describeTaskDefinitionOutput.TaskDefinition.ContainerDefinitions {
+				image, tag := awsecs.ShortDockerImage(*containerDefinition.Image)
+				rows = append(rows, GetServiceRow{
+					Name:           *service.ServiceName,
+					TaskDefinition: awsecs.ShortArn(taskDefinition),
+					Image:          image,
+					Tag:            tag,
+					DesiredCount:   *service.DesiredCount,
+					RunningCount:   *service.RunningCount,
+				})
+
 			}
 		}
-		sort.Strings(sortTaskDefinitions)
+		sort.Sort(rows)
 
-		for _, t := range sortTaskDefinitions {
-			fmt.Println(t)
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 0, 8, 1, '\t', 0)
+		fmt.Fprintln(w, "Name\tTaskDefinition\tImage\tTag\tDesired\tRunning\t")
+		for _, row := range rows {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%d\t\n",
+				row.Name,
+				row.TaskDefinition,
+				row.Image,
+				row.Tag,
+				row.DesiredCount,
+				row.RunningCount)
 		}
+		w.Flush()
 	},
+}
+
+// GetServiceRow represents output each row
+type GetServiceRow struct {
+	Name           string
+	TaskDefinition string
+	Image          string
+	Tag            string
+	DesiredCount   int64
+	RunningCount   int64
+}
+
+// GetServiceRows slice
+type GetServiceRows []GetServiceRow
+
+func (s GetServiceRows) Len() int {
+	return len(s)
+}
+
+func (s GetServiceRows) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s GetServiceRows) Less(i, j int) bool {
+	return s[i].Name < s[j].Name
+}
+
+func findService(services []ecs.Service, taskDefinition string) ecs.Service {
+	for _, service := range services {
+		if *service.TaskDefinition == taskDefinition {
+			return service
+		}
+	}
+	return ecs.Service{}
 }
 
 func init() {

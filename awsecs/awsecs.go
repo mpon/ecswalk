@@ -122,7 +122,7 @@ func ListServices(cluster string) []*ecs.ListServicesOutput {
 	return outputs
 }
 
-// DescribeServices to describe ECS services specified cluster
+// DescribeServices to describe ECS services specified cluster and services
 func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOutput {
 
 	svc := newSvc()
@@ -158,6 +158,32 @@ func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOu
 	return result
 }
 
+// DescribeAllServices to describe all ECS services specified cluster
+func DescribeAllServices(cluster string) []*ecs.DescribeServicesOutput {
+	listServiceOutputs := ListServices(cluster)
+	serviceArns := []string{}
+	for _, listServiceOutput := range listServiceOutputs {
+		for _, serviceArn := range listServiceOutput.ServiceArns {
+			serviceArns = append(serviceArns, serviceArn)
+		}
+	}
+
+	const maxAPILimitChunkSize = 10
+	describeServicesOutputs := []*ecs.DescribeServicesOutput{}
+
+	wg := &sync.WaitGroup{}
+	for _, chunkedServices := range sliceutil.ChunkedSlice(serviceArns, maxAPILimitChunkSize) {
+		wg.Add(1)
+		go func(c []string) {
+			defer wg.Done()
+			describeServicesOutput := DescribeServices(cluster, c)
+			describeServicesOutputs = append(describeServicesOutputs, describeServicesOutput)
+		}(chunkedServices)
+	}
+	wg.Wait()
+	return describeServicesOutputs
+}
+
 // DescribeTaskDefinition to describe specified task definition
 func DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitionOutput {
 	svc := newSvc()
@@ -191,7 +217,7 @@ func DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitio
 
 // DescribeTaskDefinitions describe with task definition about all services
 func DescribeTaskDefinitions(cluster string, services []string) []*ecs.DescribeTaskDefinitionOutput {
-	maxAPILimitChunkSize := 10
+	const maxAPILimitChunkSize = 10
 	taskDefinitions := []string{}
 	outputs := []*ecs.DescribeTaskDefinitionOutput{}
 
