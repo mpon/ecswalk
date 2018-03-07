@@ -33,7 +33,7 @@ import (
 	"github.com/mpon/ecsctl/sliceutil"
 )
 
-// ListClusters  list ECS clusters
+// ListClusters to list clusters
 func ListClusters() *ecs.ListClustersOutput {
 	svc := newSvc()
 	input := &ecs.ListClustersInput{}
@@ -93,8 +93,8 @@ func DescribeClusters(clusterArns []string) *ecs.DescribeClustersOutput {
 	return result
 }
 
-// ListServices list ECS Service recursively
-func ListServices(cluster string) []string {
+// ListServices to list ECS Service recursively
+func ListServices(cluster string) []*ecs.ListServicesOutput {
 
 	svc := newSvc()
 	outputs, err := listServices(cluster, svc, nil, nil)
@@ -121,15 +121,7 @@ func ListServices(cluster string) []string {
 		return nil
 	}
 
-	names := []string{}
-	for _, output := range outputs {
-		for _, arn := range output.ServiceArns {
-			s := strings.Split(arn, "/")
-			names = append(names, s[len(s)-1])
-		}
-	}
-
-	return names
+	return outputs
 }
 
 // DescribeServices describe services specified cluster and services

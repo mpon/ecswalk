@@ -48,8 +48,14 @@ var walkCmd = &cobra.Command{
 			return
 		}
 
-		services := awsecs.ListServices(cluster)
-		taskDefinitions := awsecs.DescribeTaskDefinitions(cluster, services)
+		listServicesOutputs := awsecs.ListServices(cluster)
+		serviceArns := []string{}
+		for _, listServiceOutput := range listServicesOutputs {
+			for _, serviceArn := range listServiceOutput.ServiceArns {
+				serviceArns = append(serviceArns, serviceArn)
+			}
+		}
+		taskDefinitions := awsecs.DescribeTaskDefinitions(cluster, serviceArns)
 
 		for _, t := range taskDefinitions {
 			fmt.Println(t)

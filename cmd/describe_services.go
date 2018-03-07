@@ -34,8 +34,14 @@ var describeServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "describe all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		services := awsecs.ListServices(describeServicesCmdFlagCluster)
-		outputs := awsecs.DescribeTaskDefinitions(describeServicesCmdFlagCluster, services)
+		listServicesOutputs := awsecs.ListServices(describeServicesCmdFlagCluster)
+		serviceArns := []string{}
+		for _, listServiceOutput := range listServicesOutputs {
+			for _, serviceArn := range listServiceOutput.ServiceArns {
+				serviceArns = append(serviceArns, serviceArn)
+			}
+		}
+		outputs := awsecs.DescribeTaskDefinitions(describeServicesCmdFlagCluster, serviceArns)
 
 		for _, o := range outputs {
 			fmt.Println(o)
