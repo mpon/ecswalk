@@ -22,6 +22,8 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
@@ -41,10 +43,23 @@ var describeServicesCmd = &cobra.Command{
 				serviceArns = append(serviceArns, serviceArn)
 			}
 		}
-		outputs := awsecs.DescribeTaskDefinitions(describeServicesCmdFlagCluster, serviceArns)
+		describeTaskDefinitionOutputs := awsecs.DescribeTaskDefinitions(describeServicesCmdFlagCluster, serviceArns)
 
-		for _, o := range outputs {
-			fmt.Println(o)
+		sortTaskDefinitions := []string{}
+		for _, describeTaskDefinitionOutput := range describeTaskDefinitionOutputs {
+			names := strings.Split(*describeTaskDefinitionOutput.TaskDefinition.TaskDefinitionArn, "/")
+			for _, container := range describeTaskDefinitionOutput.TaskDefinition.ContainerDefinitions {
+				tdName := names[len(names)-1]
+				images := strings.Split(*container.Image, "/")
+				image := images[len(images)-1]
+				o := fmt.Sprintf("%s => %s", tdName, image)
+				sortTaskDefinitions = append(sortTaskDefinitions, o)
+			}
+		}
+		sort.Strings(sortTaskDefinitions)
+
+		for _, t := range sortTaskDefinitions {
+			fmt.Println(t)
 		}
 	},
 }

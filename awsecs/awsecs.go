@@ -22,8 +22,6 @@ package awsecs
 
 import (
 	"fmt"
-	"sort"
-	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -160,8 +158,8 @@ func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOu
 	return result
 }
 
-// DescribeTaskDefinition describe specified task definition
-func DescribeTaskDefinition(taskDefinitionArn string) []string {
+// DescribeTaskDefinition to describe specified task definition
+func DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitionOutput {
 	svc := newSvc()
 	input := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(taskDefinitionArn),
@@ -188,22 +186,14 @@ func DescribeTaskDefinition(taskDefinitionArn string) []string {
 		}
 		return nil
 	}
-
-	images := []string{}
-	for _, c := range result.TaskDefinition.ContainerDefinitions {
-		t := strings.Split(taskDefinitionArn, "/")
-		s := strings.Split(*c.Image, "/")
-		r := fmt.Sprintf("%s => %s", t[len(t)-1], s[len(s)-1])
-		images = append(images, r)
-	}
-	return images
+	return result
 }
 
 // DescribeTaskDefinitions describe with task definition about all services
-func DescribeTaskDefinitions(cluster string, services []string) []string {
+func DescribeTaskDefinitions(cluster string, services []string) []*ecs.DescribeTaskDefinitionOutput {
 	maxAPILimitChunkSize := 10
 	taskDefinitions := []string{}
-	outputs := []string{}
+	outputs := []*ecs.DescribeTaskDefinitionOutput{}
 
 	wg := &sync.WaitGroup{}
 	for _, chunkedServices := range sliceutil.ChunkedSlice(services, maxAPILimitChunkSize) {
@@ -222,12 +212,11 @@ func DescribeTaskDefinitions(cluster string, services []string) []string {
 		wg.Add(1)
 		go func(t string) {
 			defer wg.Done()
-			outputs = append(outputs, DescribeTaskDefinition(t)...)
+			outputs = append(outputs, DescribeTaskDefinition(t))
 		}(t)
 	}
 	wg.Wait()
 
-	sort.Strings(outputs)
 	return outputs
 }
 
