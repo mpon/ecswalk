@@ -124,8 +124,8 @@ func ListServices(cluster string) []*ecs.ListServicesOutput {
 	return outputs
 }
 
-// DescribeServices describe services specified cluster and services
-func DescribeServices(cluster string, services []string) []string {
+// DescribeServices to describe ECS services specified cluster
+func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOutput {
 
 	svc := newSvc()
 
@@ -157,12 +157,7 @@ func DescribeServices(cluster string, services []string) []string {
 		}
 		return nil
 	}
-
-	taskDefinitions := []string{}
-	for _, s := range result.Services {
-		taskDefinitions = append(taskDefinitions, *s.TaskDefinition)
-	}
-	return taskDefinitions
+	return result
 }
 
 // DescribeTaskDefinition describe specified task definition
@@ -215,8 +210,10 @@ func DescribeTaskDefinitions(cluster string, services []string) []string {
 		wg.Add(1)
 		go func(c []string) {
 			defer wg.Done()
-			ts := DescribeServices(cluster, c)
-			taskDefinitions = append(taskDefinitions, ts...)
+			describeServicesOutput := DescribeServices(cluster, c)
+			for _, service := range describeServicesOutput.Services {
+				taskDefinitions = append(taskDefinitions, *service.TaskDefinition)
+			}
 		}(chunkedServices)
 	}
 	wg.Wait()
