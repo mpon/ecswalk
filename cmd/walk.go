@@ -37,8 +37,7 @@ var walkCmd = &cobra.Command{
 		listClustersOutput := awsecs.ListClusters()
 		clusterNames := []string{}
 		for _, clusterArn := range listClustersOutput.ClusterArns {
-			s := strings.Split(clusterArn, "/")
-			clusterNames = append(clusterNames, s[len(s)-1])
+			clusterNames = append(clusterNames, awsecs.ShortArn(clusterArn))
 		}
 
 		prompt := newPrompt(clusterNames)
@@ -47,19 +46,7 @@ var walkCmd = &cobra.Command{
 			fmt.Printf("Prompt failed %v\n", err)
 			return
 		}
-
-		listServicesOutputs := awsecs.ListServices(cluster)
-		serviceArns := []string{}
-		for _, listServiceOutput := range listServicesOutputs {
-			for _, serviceArn := range listServiceOutput.ServiceArns {
-				serviceArns = append(serviceArns, serviceArn)
-			}
-		}
-		taskDefinitions := awsecs.DescribeTaskDefinitions(cluster, serviceArns)
-
-		for _, t := range taskDefinitions {
-			fmt.Println(t)
-		}
+		getServicesCmdRun(cluster)
 	},
 }
 

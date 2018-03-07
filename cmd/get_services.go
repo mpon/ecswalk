@@ -38,85 +38,55 @@ var getServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "get all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		describeServicesOutputs := awsecs.DescribeAllServices(getServicesCmdFlagCluster)
-		services := []ecs.Service{}
-		serviceArns := []string{}
-		for _, describeServiceOutput := range describeServicesOutputs {
-			for _, service := range describeServiceOutput.Services {
-				services = append(services, service)
-				serviceArns = append(serviceArns, *service.ServiceArn)
-			}
-		}
-		describeTaskDefinitionOutputs := awsecs.DescribeTaskDefinitions(getServicesCmdFlagCluster, serviceArns)
-
-		rows := GetServiceRows{}
-		for _, describeTaskDefinitionOutput := range describeTaskDefinitionOutputs {
-			taskDefinition := *describeTaskDefinitionOutput.TaskDefinition.TaskDefinitionArn
-			service := findService(services, taskDefinition)
-
-			for _, containerDefinition := range describeTaskDefinitionOutput.TaskDefinition.ContainerDefinitions {
-				image, tag := awsecs.ShortDockerImage(*containerDefinition.Image)
-				rows = append(rows, GetServiceRow{
-					Name:           *service.ServiceName,
-					TaskDefinition: awsecs.ShortArn(taskDefinition),
-					Image:          image,
-					Tag:            tag,
-					DesiredCount:   *service.DesiredCount,
-					RunningCount:   *service.RunningCount,
-				})
-
-			}
-		}
-		sort.Sort(rows)
-
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 0, 8, 1, '\t', 0)
-		fmt.Fprintln(w, "Name\tTaskDefinition\tImage\tTag\tDesired\tRunning\t")
-		for _, row := range rows {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%d\t\n",
-				row.Name,
-				row.TaskDefinition,
-				row.Image,
-				row.Tag,
-				row.DesiredCount,
-				row.RunningCount)
-		}
-		w.Flush()
+		getServicesCmdRun(getServicesCmdFlagCluster)
 	},
 }
 
-// GetServiceRow represents output each row
-type GetServiceRow struct {
-	Name           string
-	TaskDefinition string
-	Image          string
-	Tag            string
-	DesiredCount   int64
-	RunningCount   int64
-}
-
-// GetServiceRows slice
-type GetServiceRows []GetServiceRow
-
-func (s GetServiceRows) Len() int {
-	return len(s)
-}
-
-func (s GetServiceRows) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s GetServiceRows) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
-}
-
-func findService(services []ecs.Service, taskDefinition string) ecs.Service {
-	for _, service := range services {
-		if *service.TaskDefinition == taskDefinition {
-			return service
+func getServicesCmdRun(cluster string) {
+	describeServicesOutputs := awsecs.DescribeAllServices(cluster)
+	services := []ecs.Service{}
+	serviceArns := []string{}
+	for _, describeServiceOutput := range describeServicesOutputs {
+		for _, service := range describeServiceOutput.Services {
+			services = append(services, service)
+			serviceArns = append(serviceArns, *service.ServiceArn)
 		}
 	}
-	return ecs.Service{}
+	describeTaskDefinitionOutputs := awsecs.DescribeTaskDefinitions(cluster, serviceArns)
+
+	rows := GetServiceRows{}
+	for _, describeTaskDefinitionOutput := range describeTaskDefinitionOutputs {
+		taskDefinition := *describeTaskDefinitionOutput.TaskDefinition.TaskDefinitionArn
+		service := awsecs.FindService(services, taskDefinition)
+
+		for _, containerDefinition := range describeTaskDefinitionOutput.TaskDefinition.ContainerDefinitions {
+			image, tag := awsecs.ShortDockerImage(*containerDefinition.Image)
+			rows = append(rows, GetServiceRow{
+				Name:           *service.ServiceName,
+				TaskDefinition: awsecs.ShortArn(taskDefinition),
+				Image:          image,
+				Tag:            tag,
+				DesiredCount:   *service.DesiredCount,
+				RunningCount:   *service.RunningCount,
+			})
+
+		}
+	}
+	sort.Sort(rows)
+
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
+	fmt.Fprintln(w, "Name\tTaskDefinition\tImage\tTag\tDesired\tRunning\t")
+	for _, row := range rows {
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%d\t\n",
+			row.Name,
+			row.TaskDefinition,
+			row.Image,
+			row.Tag,
+			row.DesiredCount,
+			row.RunningCount)
+	}
+	w.Flush()
 }
 
 func init() {

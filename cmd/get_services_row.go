@@ -18,37 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package awsecs
+package cmd
 
-import (
-	"strings"
-
-	"github.com/aws/aws-sdk-go-v2/service/ecs"
-)
-
-// ShortArn returns last splited part by slash
-func ShortArn(arn string) string {
-	const slash = "/"
-	parts := strings.Split(arn, slash)
-	return parts[len(parts)-1]
+// GetServiceRow represents output each row
+type GetServiceRow struct {
+	Name           string
+	TaskDefinition string
+	Image          string
+	Tag            string
+	DesiredCount   int64
+	RunningCount   int64
 }
 
-// ShortDockerImage returns docker image name and tag
-func ShortDockerImage(image string) (string, string) {
-	const slash = "/"
-	const colon = ":"
-	parts := strings.Split(image, slash)
-	names := strings.Split(parts[len(parts)-1], colon)
+// GetServiceRows slice
+type GetServiceRows []GetServiceRow
 
-	return names[0], names[1]
+func (s GetServiceRows) Len() int {
+	return len(s)
 }
 
-// FindService to find service by task definition
-func FindService(services []ecs.Service, taskDefinition string) ecs.Service {
-	for _, service := range services {
-		if *service.TaskDefinition == taskDefinition {
-			return service
-		}
-	}
-	return ecs.Service{}
+func (s GetServiceRows) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s GetServiceRows) Less(i, j int) bool {
+	return s[i].Name < s[j].Name
 }
