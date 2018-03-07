@@ -33,8 +33,8 @@ import (
 	"github.com/mpon/ecsctl/sliceutil"
 )
 
-// ListClusters  ist ECS clusters
-func ListClusters() []string {
+// ListClusters  list ECS clusters
+func ListClusters() *ecs.ListClustersOutput {
 	svc := newSvc()
 	input := &ecs.ListClustersInput{}
 
@@ -59,14 +59,38 @@ func ListClusters() []string {
 		}
 		return nil
 	}
+	return result
+}
 
-	names := []string{}
-	for _, arn := range result.ClusterArns {
-		s := strings.Split(arn, "/")
-		names = append(names, s[len(s)-1])
+// DescribeClusters to describe a cluster
+func DescribeClusters(clusterArns []string) *ecs.DescribeClustersOutput {
+	svc := newSvc()
+	input := &ecs.DescribeClustersInput{
+		Clusters: clusterArns,
 	}
 
-	return names
+	req := svc.DescribeClustersRequest(input)
+	result, err := req.Send()
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case ecs.ErrCodeServerException:
+				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
+			case ecs.ErrCodeClientException:
+				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeInvalidParameterException:
+				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return nil
+	}
+	return result
 }
 
 // ListServices list ECS Service recursively

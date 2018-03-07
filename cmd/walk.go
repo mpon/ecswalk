@@ -34,9 +34,14 @@ var walkCmd = &cobra.Command{
 	Use:   "walk",
 	Short: "describe ECS services by selecting cluster interactively",
 	Run: func(cmd *cobra.Command, args []string) {
-		clusters := awsecs.ListClusters()
+		listClustersOutput := awsecs.ListClusters()
+		clusterNames := []string{}
+		for _, clusterArn := range listClustersOutput.ClusterArns {
+			s := strings.Split(clusterArn, "/")
+			clusterNames = append(clusterNames, s[len(s)-1])
+		}
 
-		prompt := newPrompt(clusters)
+		prompt := newPrompt(clusterNames)
 		_, cluster, err := prompt.Run()
 		if err != nil {
 			fmt.Printf("Prompt failed %v\n", err)
