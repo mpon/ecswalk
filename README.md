@@ -6,20 +6,19 @@ A convert tool from AWS Elastic Container Service(ECS) to kubernetes manifest.
 
 ### Get Information from ECS
 
-* list ECS services for specified ECS cluster
+* get ECS clusters
 
 ```console
-$ ecsctl get service --cluster default`
+$ ecsctl get clusters
 ```
 
-* describe ECS services for specified ECS cluster
+* get ECS services for specified ECS cluster
 
 ```console
-$ ecsctl describe service --cluster default
+$ ecsctl get service --cluster default
 ```
 
-
-* describe ECS services by selecting cluster interactively
+* get ECS services by selecting cluster interactively
 
 ```console
 $ ecsctl walk
