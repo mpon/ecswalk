@@ -22,6 +22,8 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
@@ -34,9 +36,30 @@ var getServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "get all ECS services specified cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		services := awsecs.ListServices(getServicesCmdFlagCluster)
-		for _, s := range services {
-			fmt.Println(s)
+		listServicesOutputs := awsecs.ListServices(getServicesCmdFlagCluster)
+		serviceArns := []string{}
+		for _, listServiceOutput := range listServicesOutputs {
+			for _, serviceArn := range listServiceOutput.ServiceArns {
+				serviceArns = append(serviceArns, serviceArn)
+			}
+		}
+		describeTaskDefinitionOutputs := awsecs.DescribeTaskDefinitions(getServicesCmdFlagCluster, serviceArns)
+
+		sortTaskDefinitions := []string{}
+		for _, describeTaskDefinitionOutput := range describeTaskDefinitionOutputs {
+			names := strings.Split(*describeTaskDefinitionOutput.TaskDefinition.TaskDefinitionArn, "/")
+			for _, container := range describeTaskDefinitionOutput.TaskDefinition.ContainerDefinitions {
+				tdName := names[len(names)-1]
+				images := strings.Split(*container.Image, "/")
+				image := images[len(images)-1]
+				o := fmt.Sprintf("%s => %s", tdName, image)
+				sortTaskDefinitions = append(sortTaskDefinitions, o)
+			}
+		}
+		sort.Strings(sortTaskDefinitions)
+
+		for _, t := range sortTaskDefinitions {
+			fmt.Println(t)
 		}
 	},
 }
