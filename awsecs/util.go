@@ -40,6 +40,9 @@ func ShortDockerImage(image string) (string, string) {
 	parts := strings.Split(image, slash)
 	names := strings.Split(parts[len(parts)-1], colon)
 
+	if len(names) == 1 {
+		return names[0], ""
+	}
 	return names[0], names[1]
 }
 
