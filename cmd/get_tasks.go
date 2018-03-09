@@ -22,7 +22,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"text/tabwriter"
 
+	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +37,21 @@ var getTasksCmd = &cobra.Command{
 	Use:   "tasks",
 	Short: "get Tasks specified service",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("tasks called")
+		listTasksOutput := awsecs.ListTasks(getTasksCmdFlagCluster, getTasksCmdFlagService)
+		describeTasksOutput := awsecs.DescribeTasks(getTasksCmdFlagCluster, listTasksOutput.TaskArns)
+
+		// task.id, taskdef, Status, external-link, image, tag, loggroup, logstream
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 0, 8, 1, '\t', 0)
+		fmt.Fprintln(w, "TaskDef\tStatus\tLogStream")
+		for _, task := range describeTasksOutput.Tasks {
+			fmt.Fprintf(w, "%s\t%s\t%s\n",
+				awsecs.ShortArn(*task.TaskDefinitionArn),
+				*task.LastStatus,
+				awsecs.ShortArn(*task.TaskArn),
+			)
+		}
+		w.Flush()
 	},
 }
 

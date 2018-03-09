@@ -246,6 +246,76 @@ func DescribeTaskDefinitions(cluster string, services []string) []*ecs.DescribeT
 	return outputs
 }
 
+// ListTasks to list specified cluster
+func ListTasks(cluster string, service string) *ecs.ListTasksOutput {
+	svc := newSvc()
+	input := &ecs.ListTasksInput{
+		Cluster:     aws.String(cluster),
+		ServiceName: aws.String(service),
+	}
+
+	req := svc.ListTasksRequest(input)
+	result, err := req.Send()
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case ecs.ErrCodeServerException:
+				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
+			case ecs.ErrCodeClientException:
+				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeInvalidParameterException:
+				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
+			case ecs.ErrCodeClusterNotFoundException:
+				fmt.Println(ecs.ErrCodeClusterNotFoundException, aerr.Error())
+			case ecs.ErrCodeServiceNotFoundException:
+				fmt.Println(ecs.ErrCodeServiceNotFoundException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return nil
+	}
+	return result
+}
+
+// DescribeTasks to describe specified cluster and tasks
+func DescribeTasks(cluster string, tasks []string) *ecs.DescribeTasksOutput {
+	svc := newSvc()
+	input := &ecs.DescribeTasksInput{
+		Cluster: aws.String(cluster),
+		Tasks:   tasks,
+	}
+
+	req := svc.DescribeTasksRequest(input)
+	result, err := req.Send()
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case ecs.ErrCodeServerException:
+				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
+			case ecs.ErrCodeClientException:
+				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeInvalidParameterException:
+				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
+			case ecs.ErrCodeClusterNotFoundException:
+				fmt.Println(ecs.ErrCodeClusterNotFoundException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return nil
+	}
+	return result
+}
+
 func newSvc() *ecs.ECS {
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
