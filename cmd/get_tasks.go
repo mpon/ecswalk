@@ -41,6 +41,8 @@ var getTasksCmd = &cobra.Command{
 	Short: "get Tasks specified service",
 	Run: func(cmd *cobra.Command, args []string) {
 		rows := GetTaskRows{}
+		instanceDatas := InstanceDatas{}
+
 		listTasksOutput := awsecs.ListTasks(getTasksCmdFlagCluster, getTasksCmdFlagService)
 		describeTasksOutput := awsecs.DescribeTasks(getTasksCmdFlagCluster, listTasksOutput.TaskArns)
 
@@ -55,9 +57,9 @@ var getTasksCmd = &cobra.Command{
 			containerInstanceArns = append(containerInstanceArns, *task.ContainerInstanceArn)
 		}
 		containerInstanceArns = sliceutil.DistinctSlice(containerInstanceArns)
-		containerInstances := []*ContainerInstance{}
+
 		for _, arn := range containerInstanceArns {
-			containerInstances = append(containerInstances, &ContainerInstance{
+			instanceDatas = append(instanceDatas, &InstanceData{
 				ContainerInstanceArn: arn,
 			})
 		}
@@ -65,12 +67,7 @@ var getTasksCmd = &cobra.Command{
 		ec2InstanceIds := []string{}
 		describeContainerInstancesOutput := awsecs.DescribeContainerInstances(getTasksCmdFlagCluster, containerInstanceArns)
 		for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
-			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
-			for _, c := range containerInstances {
-				if c.ContainerInstanceArn == *containerInstance.ContainerInstanceArn {
-					c.EC2InstanceID = *containerInstance.Ec2InstanceId
-				}
-			}
+			instanceDatas.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
 			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
 		}
 		ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
@@ -79,18 +76,14 @@ var getTasksCmd = &cobra.Command{
 
 		for _, reservation := range describeInstancesOutput.Reservations {
 			for _, instance := range reservation.Instances {
-				for _, c := range containerInstances {
-					if c.EC2InstanceID == *instance.InstanceId {
-						c.PrivateIP = *instance.PrivateIpAddress
-					}
-				}
+				instanceDatas.UpdatePrivateIPByInstanceID(*instance.PrivateIpAddress, *instance.InstanceId)
 			}
 		}
 
 		for _, row := range rows {
-			for _, c := range containerInstances {
-				if row.ContainerInstanceArn == c.ContainerInstanceArn {
-					row.PrivateIP = c.PrivateIP
+			for _, data := range instanceDatas {
+				if row.ContainerInstanceArn == data.ContainerInstanceArn {
+					row.PrivateIP = data.PrivateIP
 				}
 			}
 		}
@@ -111,12 +104,6 @@ var getTasksCmd = &cobra.Command{
 		}
 		w.Flush()
 	},
-}
-
-type ContainerInstance struct {
-	ContainerInstanceArn string
-	EC2InstanceID        string
-	PrivateIP            string
 }
 
 func init() {
