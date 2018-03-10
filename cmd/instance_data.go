@@ -47,3 +47,14 @@ func (instanceDatas InstanceDatas) UpdatePrivateIPByInstanceID(address string, i
 		}
 	}
 }
+
+// NewInstanceDatas to create with containerInstanceArns
+func NewInstanceDatas(containerInstanceArns []string) InstanceDatas {
+	instanceDatas := InstanceDatas{}
+	for _, arn := range containerInstanceArns {
+		instanceDatas = append(instanceDatas, &InstanceData{
+			ContainerInstanceArn: arn,
+		})
+	}
+	return instanceDatas
+}

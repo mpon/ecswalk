@@ -41,7 +41,6 @@ var getTasksCmd = &cobra.Command{
 	Short: "get Tasks specified service",
 	Run: func(cmd *cobra.Command, args []string) {
 		rows := GetTaskRows{}
-		instanceDatas := InstanceDatas{}
 
 		listTasksOutput := awsecs.ListTasks(getTasksCmdFlagCluster, getTasksCmdFlagService)
 		describeTasksOutput := awsecs.DescribeTasks(getTasksCmdFlagCluster, listTasksOutput.TaskArns)
@@ -58,11 +57,7 @@ var getTasksCmd = &cobra.Command{
 		}
 		containerInstanceArns = sliceutil.DistinctSlice(containerInstanceArns)
 
-		for _, arn := range containerInstanceArns {
-			instanceDatas = append(instanceDatas, &InstanceData{
-				ContainerInstanceArn: arn,
-			})
-		}
+		instanceDatas := NewInstanceDatas(containerInstanceArns)
 
 		ec2InstanceIds := []string{}
 		describeContainerInstancesOutput := awsecs.DescribeContainerInstances(getTasksCmdFlagCluster, containerInstanceArns)
