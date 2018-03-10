@@ -40,6 +40,16 @@ var getTasksCmd = &cobra.Command{
 		listTasksOutput := awsecs.ListTasks(getTasksCmdFlagCluster, getTasksCmdFlagService)
 		describeTasksOutput := awsecs.DescribeTasks(getTasksCmdFlagCluster, listTasksOutput.TaskArns)
 
+		containerInstances := []string{}
+		for _, task := range describeTasksOutput.Tasks {
+			containerInstances = append(containerInstances, *task.ContainerInstanceArn)
+		}
+
+		describeContainerInstancesOutput := awsecs.DescribeContainerInstances(getTasksCmdFlagCluster, containerInstances)
+		for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
+			fmt.Println(*containerInstance.Ec2InstanceId)
+		}
+
 		// task.id, taskdef, Status, external-link, image, tag, loggroup, logstream
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 8, 1, '\t', 0)
