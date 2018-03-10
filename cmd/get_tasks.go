@@ -25,6 +25,7 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/mpon/ecsctl/awsec2"
 	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
 )
@@ -45,9 +46,18 @@ var getTasksCmd = &cobra.Command{
 			containerInstances = append(containerInstances, *task.ContainerInstanceArn)
 		}
 
+		ec2InstanceIds := []string{}
 		describeContainerInstancesOutput := awsecs.DescribeContainerInstances(getTasksCmdFlagCluster, containerInstances)
 		for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
-			fmt.Println(*containerInstance.Ec2InstanceId)
+			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
+		}
+
+		describeInstancesOutput := awsec2.DescribeInstances(ec2InstanceIds)
+
+		for _, reservation := range describeInstancesOutput.Reservations {
+			for _, instance := range reservation.Instances {
+				fmt.Println(*instance.PrivateIpAddress)
+			}
 		}
 
 		// task.id, taskdef, Status, external-link, image, tag, loggroup, logstream
