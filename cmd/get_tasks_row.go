@@ -18,33 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package sliceutil
+package cmd
 
-// ChunkedSlice chunk slice by chunk size
-// ref: https://stackoverflow.com/questions/35179656/slice-chunking-in-go
-func ChunkedSlice(slice []string, chunkSize int) [][]string {
-	chunked := [][]string{}
-	for i := 0; i < len(slice); i += chunkSize {
-		end := i + chunkSize
-
-		if end > len(slice) {
-			end = len(slice)
-		}
-
-		chunked = append(chunked, slice[i:end])
-	}
-	return chunked
+// GetTaskRow represents output each row
+type GetTaskRow struct {
+	TaskID               string
+	TaskDefinition       string
+	Status               string
+	ContainerInstanceArn string
+	EC2InstanceID        string
+	PrivateIP            string
+	AwsLogs              string
 }
 
-// DistinctSlice to remove duplicate value
-func DistinctSlice(slice []string) []string {
-	distinct := []string{}
-	sliceMap := map[string]bool{}
-	for _, v := range slice {
-		if !sliceMap[v] {
-			sliceMap[v] = true
-			distinct = append(distinct, v)
-		}
-	}
-	return distinct
+// GetTaskRows slice
+type GetTaskRows []*GetTaskRow
+
+func (s GetTaskRows) Len() int {
+	return len(s)
+}
+
+func (s GetTaskRows) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s GetTaskRows) Less(i, j int) bool {
+	return s[i].TaskID < s[j].TaskID
 }

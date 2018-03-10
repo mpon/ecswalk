@@ -20,31 +20,30 @@
 
 package sliceutil
 
-// ChunkedSlice chunk slice by chunk size
-// ref: https://stackoverflow.com/questions/35179656/slice-chunking-in-go
-func ChunkedSlice(slice []string, chunkSize int) [][]string {
-	chunked := [][]string{}
-	for i := 0; i < len(slice); i += chunkSize {
-		end := i + chunkSize
+import (
+	"reflect"
+	"testing"
+)
 
-		if end > len(slice) {
-			end = len(slice)
-		}
-
-		chunked = append(chunked, slice[i:end])
+func TestChunkedSlice(t *testing.T) {
+	slice := []string{"a", "b", "c", "a", "b"}
+	expect := [][]string{
+		[]string{"a", "b", "c"},
+		[]string{"a", "b"},
 	}
-	return chunked
+	result := ChunkedSlice(slice, 3)
+
+	if !reflect.DeepEqual(result, expect) {
+		t.Fatalf("expect %s\nbut %s", expect, result)
+	}
 }
 
-// DistinctSlice to remove duplicate value
-func DistinctSlice(slice []string) []string {
-	distinct := []string{}
-	sliceMap := map[string]bool{}
-	for _, v := range slice {
-		if !sliceMap[v] {
-			sliceMap[v] = true
-			distinct = append(distinct, v)
-		}
+func TestDistinctSlice(t *testing.T) {
+	slice := []string{"a", "b", "c", "a", "a", "b", "d"}
+	expect := []string{"a", "b", "c", "d"}
+	result := DistinctSlice(slice)
+
+	if !reflect.DeepEqual(result, expect) {
+		t.Fatalf("expect %s\nbut %s", expect, result)
 	}
-	return distinct
 }

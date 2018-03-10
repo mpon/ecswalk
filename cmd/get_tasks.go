@@ -23,10 +23,12 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sort"
 	"text/tabwriter"
 
 	"github.com/mpon/ecsctl/awsec2"
 	"github.com/mpon/ecsctl/awsecs"
+	"github.com/mpon/ecsctl/sliceutil"
 	"github.com/spf13/cobra"
 )
 
@@ -38,41 +40,83 @@ var getTasksCmd = &cobra.Command{
 	Use:   "tasks",
 	Short: "get Tasks specified service",
 	Run: func(cmd *cobra.Command, args []string) {
+		rows := GetTaskRows{}
 		listTasksOutput := awsecs.ListTasks(getTasksCmdFlagCluster, getTasksCmdFlagService)
 		describeTasksOutput := awsecs.DescribeTasks(getTasksCmdFlagCluster, listTasksOutput.TaskArns)
 
-		containerInstances := []string{}
+		containerInstanceArns := []string{}
 		for _, task := range describeTasksOutput.Tasks {
-			containerInstances = append(containerInstances, *task.ContainerInstanceArn)
+			rows = append(rows, &GetTaskRow{
+				TaskID:               awsecs.ShortArn(*task.TaskArn),
+				TaskDefinition:       awsecs.ShortArn(*task.TaskDefinitionArn),
+				Status:               *task.LastStatus,
+				ContainerInstanceArn: *task.ContainerInstanceArn,
+			})
+			containerInstanceArns = append(containerInstanceArns, *task.ContainerInstanceArn)
+		}
+		containerInstanceArns = sliceutil.DistinctSlice(containerInstanceArns)
+		containerInstances := []*ContainerInstance{}
+		for _, arn := range containerInstanceArns {
+			containerInstances = append(containerInstances, &ContainerInstance{
+				ContainerInstanceArn: arn,
+			})
 		}
 
 		ec2InstanceIds := []string{}
-		describeContainerInstancesOutput := awsecs.DescribeContainerInstances(getTasksCmdFlagCluster, containerInstances)
+		describeContainerInstancesOutput := awsecs.DescribeContainerInstances(getTasksCmdFlagCluster, containerInstanceArns)
 		for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
 			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
+			for _, c := range containerInstances {
+				if c.ContainerInstanceArn == *containerInstance.ContainerInstanceArn {
+					c.EC2InstanceID = *containerInstance.Ec2InstanceId
+				}
+			}
+			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
 		}
+		ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
 
 		describeInstancesOutput := awsec2.DescribeInstances(ec2InstanceIds)
 
 		for _, reservation := range describeInstancesOutput.Reservations {
 			for _, instance := range reservation.Instances {
-				fmt.Println(*instance.PrivateIpAddress)
+				for _, c := range containerInstances {
+					if c.EC2InstanceID == *instance.InstanceId {
+						c.PrivateIP = *instance.PrivateIpAddress
+					}
+				}
 			}
 		}
 
-		// task.id, taskdef, Status, external-link, image, tag, loggroup, logstream
+		for _, row := range rows {
+			for _, c := range containerInstances {
+				if row.ContainerInstanceArn == c.ContainerInstanceArn {
+					row.PrivateIP = c.PrivateIP
+				}
+			}
+		}
+
+		sort.Sort(rows)
+
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 8, 1, '\t', 0)
-		fmt.Fprintln(w, "TaskDef\tStatus\tLogStream")
-		for _, task := range describeTasksOutput.Tasks {
-			fmt.Fprintf(w, "%s\t%s\t%s\n",
-				awsecs.ShortArn(*task.TaskDefinitionArn),
-				*task.LastStatus,
-				awsecs.ShortArn(*task.TaskArn),
+		fmt.Fprintln(w, "TaskId\tTaskDefinition\tStatus\tPrivateIp\tAwsLogs")
+		for _, row := range rows {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+				row.TaskID,
+				row.TaskDefinition,
+				row.Status,
+				row.PrivateIP,
+				row.AwsLogs,
 			)
 		}
 		w.Flush()
 	},
+}
+
+type ContainerInstance struct {
+	ContainerInstanceArn string
+	EC2InstanceID        string
+	PrivateIP            string
 }
 
 func init() {

@@ -18,33 +18,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package sliceutil
+package cmd
 
-// ChunkedSlice chunk slice by chunk size
-// ref: https://stackoverflow.com/questions/35179656/slice-chunking-in-go
-func ChunkedSlice(slice []string, chunkSize int) [][]string {
-	chunked := [][]string{}
-	for i := 0; i < len(slice); i += chunkSize {
-		end := i + chunkSize
+import (
+	"fmt"
+	"reflect"
+	"sort"
+	"testing"
+)
 
-		if end > len(slice) {
-			end = len(slice)
-		}
+func TestGetTaskRowSortByTaskIdAsc(t *testing.T) {
 
-		chunked = append(chunked, slice[i:end])
-	}
-	return chunked
-}
-
-// DistinctSlice to remove duplicate value
-func DistinctSlice(slice []string) []string {
-	distinct := []string{}
-	sliceMap := map[string]bool{}
-	for _, v := range slice {
-		if !sliceMap[v] {
-			sliceMap[v] = true
-			distinct = append(distinct, v)
+	row := func(index int64) GetTaskRow {
+		return GetTaskRow{
+			TaskID:         fmt.Sprintf("A%d", index),
+			TaskDefinition: fmt.Sprintf("B%d", index),
+			Status:         fmt.Sprintf("C%d", index),
+			PrivateIP:      fmt.Sprintf("D%d", index),
+			AwsLogs:        fmt.Sprintf("E%d", index),
 		}
 	}
-	return distinct
+
+	rows := GetTaskRows{}
+
+	for i := 3; i > 0; i-- {
+		r := row(int64(i))
+		rows = append(rows, &r)
+	}
+
+	for i, v := range rows {
+		r := row(int64(3 - i))
+		expect := &r
+		if !reflect.DeepEqual(v, expect) {
+			t.Fatalf("expect %#v\nbut %#v", expect, v)
+		}
+	}
+
+	sort.Sort(rows)
+
+	for i, v := range rows {
+		r := row(int64(i + 1))
+		expect := &r
+		if !reflect.DeepEqual(v, expect) {
+			t.Fatalf("Not orderd TaskID by asc\nexpect %#v\nbut %#v", expect, v)
+		}
+	}
+
 }
