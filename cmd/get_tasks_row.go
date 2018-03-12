@@ -28,7 +28,6 @@ type GetTaskRow struct {
 	ContainerInstanceArn string
 	EC2InstanceID        string
 	PrivateIP            string
-	AwsLogs              string
 }
 
 // GetTaskRows slice

@@ -62,6 +62,7 @@ var getTasksCmd = &cobra.Command{
 		for _, row := range rows {
 			for _, data := range instanceDatas {
 				if row.ContainerInstanceArn == data.ContainerInstanceArn {
+					row.EC2InstanceID = data.EC2InstanceID
 					row.PrivateIP = data.PrivateIP
 				}
 			}
@@ -71,14 +72,14 @@ var getTasksCmd = &cobra.Command{
 
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 8, 1, '\t', 0)
-		fmt.Fprintln(w, "TaskId\tTaskDefinition\tStatus\tPrivateIp\tAwsLogs")
+		fmt.Fprintln(w, "TaskId\tTaskDefinition\tStatus\tEC2Instance\tPrivateIp")
 		for _, row := range rows {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 				row.TaskID,
 				row.TaskDefinition,
 				row.Status,
+				row.EC2InstanceID,
 				row.PrivateIP,
-				row.AwsLogs,
 			)
 		}
 		w.Flush()

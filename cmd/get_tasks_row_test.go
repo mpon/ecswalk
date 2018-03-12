@@ -35,7 +35,6 @@ func TestGetTaskRowSortByTaskIdAsc(t *testing.T) {
 			TaskDefinition: fmt.Sprintf("B%d", index),
 			Status:         fmt.Sprintf("C%d", index),
 			PrivateIP:      fmt.Sprintf("D%d", index),
-			AwsLogs:        fmt.Sprintf("E%d", index),
 		}
 	}
 
