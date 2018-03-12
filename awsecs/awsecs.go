@@ -22,6 +22,7 @@ package awsecs
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -55,7 +56,7 @@ func ListClusters() *ecs.ListClustersOutput {
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return nil
+		os.Exit(1)
 	}
 	return result
 }
@@ -86,7 +87,7 @@ func DescribeClusters(clusterArns []string) *ecs.DescribeClustersOutput {
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return nil
+		os.Exit(1)
 	}
 	return result
 }
@@ -116,7 +117,7 @@ func ListServices(cluster string) []*ecs.ListServicesOutput {
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return nil
+		os.Exit(1)
 	}
 
 	return outputs
@@ -153,7 +154,7 @@ func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOu
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return nil
+		os.Exit(1)
 	}
 	return result
 }
@@ -210,7 +211,7 @@ func DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitio
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return nil
+		os.Exit(1)
 	}
 	return result
 }
@@ -277,7 +278,7 @@ func ListTasks(cluster string, service string) *ecs.ListTasksOutput {
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return nil
+		os.Exit(1)
 	}
 	return result
 }
@@ -311,7 +312,7 @@ func DescribeTasks(cluster string, tasks []string) *ecs.DescribeTasksOutput {
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return nil
+		os.Exit(1)
 	}
 	return result
 }
@@ -345,7 +346,7 @@ func DescribeContainerInstances(cluster string, containerInstances []string) *ec
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return nil
+		os.Exit(1)
 	}
 	return result
 }

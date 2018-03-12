@@ -22,6 +22,7 @@ package awsec2
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
@@ -48,7 +49,7 @@ func DescribeInstances(instanceIds []string) *ec2.DescribeInstancesOutput {
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return nil
+		os.Exit(1)
 	}
 	return result
 }
