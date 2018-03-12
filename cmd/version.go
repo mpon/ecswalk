@@ -31,7 +31,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of ecsctl",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("ecsctl version 0.0.3")
+		fmt.Println("ecsctl version 0.0.4")
 	},
 }
 
