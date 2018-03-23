@@ -40,58 +40,62 @@ var getTasksCmd = &cobra.Command{
 	Use:   "tasks",
 	Short: "get Tasks specified service",
 	Run: func(cmd *cobra.Command, args []string) {
-		containerInstanceArns, rows := describeTasks()
-		instanceDatas := NewInstanceDatas(containerInstanceArns)
-
-		ec2InstanceIds := []string{}
-		describeContainerInstancesOutput := awsecs.DescribeContainerInstances(getTasksCmdFlagCluster, containerInstanceArns)
-		for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
-			instanceDatas.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
-			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
-		}
-		ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
-
-		describeInstancesOutput := awsec2.DescribeInstances(ec2InstanceIds)
-
-		for _, reservation := range describeInstancesOutput.Reservations {
-			for _, instance := range reservation.Instances {
-				instanceDatas.UpdatePrivateIPByInstanceID(*instance.PrivateIpAddress, *instance.InstanceId)
-			}
-		}
-
-		for _, row := range rows {
-			for _, data := range instanceDatas {
-				if row.ContainerInstanceArn == data.ContainerInstanceArn {
-					row.EC2InstanceID = data.EC2InstanceID
-					row.PrivateIP = data.PrivateIP
-				}
-			}
-		}
-
-		sort.Sort(rows)
-
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 0, 8, 1, '\t', 0)
-		fmt.Fprintln(w, "TaskId\tTaskDefinition\tStatus\tEC2Instance\tPrivateIp")
-		for _, row := range rows {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-				row.TaskID,
-				row.TaskDefinition,
-				row.Status,
-				row.EC2InstanceID,
-				row.PrivateIP,
-			)
-		}
-		w.Flush()
+		getTasksCmdRun(getTasksCmdFlagCluster, getTasksCmdFlagService)
 	},
 }
 
-func describeTasks() ([]string, GetTaskRows) {
+func getTasksCmdRun(cluster string, service string) {
+	containerInstanceArns, rows := describeTasks(cluster, service)
+	instanceDatas := NewInstanceDatas(containerInstanceArns)
+
+	ec2InstanceIds := []string{}
+	describeContainerInstancesOutput := awsecs.DescribeContainerInstances(cluster, containerInstanceArns)
+	for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
+		instanceDatas.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
+		ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
+	}
+	ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
+
+	describeInstancesOutput := awsec2.DescribeInstances(ec2InstanceIds)
+
+	for _, reservation := range describeInstancesOutput.Reservations {
+		for _, instance := range reservation.Instances {
+			instanceDatas.UpdatePrivateIPByInstanceID(*instance.PrivateIpAddress, *instance.InstanceId)
+		}
+	}
+
+	for _, row := range rows {
+		for _, data := range instanceDatas {
+			if row.ContainerInstanceArn == data.ContainerInstanceArn {
+				row.EC2InstanceID = data.EC2InstanceID
+				row.PrivateIP = data.PrivateIP
+			}
+		}
+	}
+
+	sort.Sort(rows)
+
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
+	fmt.Fprintln(w, "TaskId\tTaskDefinition\tStatus\tEC2Instance\tPrivateIp")
+	for _, row := range rows {
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+			row.TaskID,
+			row.TaskDefinition,
+			row.Status,
+			row.EC2InstanceID,
+			row.PrivateIP,
+		)
+	}
+	w.Flush()
+}
+
+func describeTasks(cluster string, service string) ([]string, GetTaskRows) {
 	containerInstanceArns := []string{}
 	rows := GetTaskRows{}
 
-	listTasksOutput := awsecs.ListTasks(getTasksCmdFlagCluster, getTasksCmdFlagService)
-	describeTasksOutput := awsecs.DescribeTasks(getTasksCmdFlagCluster, listTasksOutput.TaskArns)
+	listTasksOutput := awsecs.ListTasks(cluster, service)
+	describeTasksOutput := awsecs.DescribeTasks(cluster, listTasksOutput.TaskArns)
 
 	for _, task := range describeTasksOutput.Tasks {
 		rows = append(rows, &GetTaskRow{

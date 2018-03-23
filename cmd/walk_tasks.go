@@ -22,16 +22,14 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/manifoldco/promptui"
 	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
 )
 
-var walkServicesCmd = &cobra.Command{
-	Use:   "service",
-	Short: "describe ECS services by selecting cluster interactively",
+var walkTasksCmd = &cobra.Command{
+	Use:   "tasks",
+	Short: "describe ECS tasks by selecting cluster and service interactively",
 	Run: func(cmd *cobra.Command, args []string) {
 		listClustersOutput := awsecs.ListClusters()
 		clusterNames := []string{}
@@ -39,32 +37,34 @@ var walkServicesCmd = &cobra.Command{
 			clusterNames = append(clusterNames, awsecs.ShortArn(clusterArn))
 		}
 
-		prompt := newPrompt(clusterNames)
+		prompt := newPrompt(clusterNames, "Select Cluster")
 		_, cluster, err := prompt.Run()
 		if err != nil {
 			fmt.Printf("Prompt failed %v\n", err)
 			return
 		}
-		getServicesCmdRun(cluster)
+
+		describeServicesOutputs := awsecs.DescribeAllServices(cluster)
+		serviceNames := []string{}
+		for _, describeServiceOutput := range describeServicesOutputs {
+			for _, service := range describeServiceOutput.Services {
+				serviceNames = append(serviceNames, awsecs.ShortArn(*service.ServiceArn))
+			}
+		}
+
+		prompt2 := newPrompt(serviceNames, "Select Service")
+		_, service, err := prompt2.Run()
+		if err != nil {
+			fmt.Printf("Prompt failed %v\n", err)
+			return
+		}
+
+		getTasksCmdRun(cluster, service)
 	},
 }
 
-func newPrompt(clusters []string) promptui.Select {
-	searcher := func(input string, index int) bool {
-		cluster := strings.ToLower(clusters[index])
-		return strings.Contains(cluster, input)
-	}
-
-	return promptui.Select{
-		Label:    "Select cluster",
-		Items:    clusters,
-		Size:     20,
-		Searcher: searcher,
-	}
-}
-
 func init() {
-	walkCmd.AddCommand(walkServicesCmd)
+	walkCmd.AddCommand(walkTasksCmd)
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
