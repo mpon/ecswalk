@@ -21,28 +21,57 @@
 package cmd
 
 import (
+	"fmt"
+	"strings"
+
+	"github.com/manifoldco/promptui"
+	"github.com/mpon/ecsctl/awsecs"
 	"github.com/spf13/cobra"
 )
 
-// walkCmd represents the walk command
-var walkCmd = &cobra.Command{
-	Use:   "walk",
-	Short: "describe ECS information interactively",
+var walkServicesCmd = &cobra.Command{
+	Use:   "service",
+	Short: "describe ECS services by selecting cluster interactively",
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		listClustersOutput := awsecs.ListClusters()
+		clusterNames := []string{}
+		for _, clusterArn := range listClustersOutput.ClusterArns {
+			clusterNames = append(clusterNames, awsecs.ShortArn(clusterArn))
+		}
+
+		prompt := newPrompt(clusterNames)
+		_, cluster, err := prompt.Run()
+		if err != nil {
+			fmt.Printf("Prompt failed %v\n", err)
+			return
+		}
+		getServicesCmdRun(cluster)
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(walkCmd)
+func newPrompt(clusters []string) promptui.Select {
+	searcher := func(input string, index int) bool {
+		cluster := strings.ToLower(clusters[index])
+		return strings.Contains(cluster, input)
+	}
 
+	return promptui.Select{
+		Label:    "Select cluster",
+		Items:    clusters,
+		Size:     20,
+		Searcher: searcher,
+	}
+}
+
+func init() {
+	walkCmd.AddCommand(walkServicesCmd)
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// walkCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// servicesCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// walkCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// servicesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
