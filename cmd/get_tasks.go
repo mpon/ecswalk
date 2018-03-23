@@ -26,9 +26,9 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	"github.com/mpon/ecsctl/awsec2"
-	"github.com/mpon/ecsctl/awsecs"
-	"github.com/mpon/ecsctl/sliceutil"
+	"github.com/mpon/ecswalk/awsec2"
+	"github.com/mpon/ecswalk/awsecs"
+	"github.com/mpon/ecswalk/sliceutil"
 	"github.com/spf13/cobra"
 )
 

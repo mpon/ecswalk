@@ -1,4 +1,4 @@
-# ecsctl
+# ecswalk
 
 Show information for Amazon Elastic Container Service(ECS) like the AWS management console.
 
@@ -9,19 +9,19 @@ Show information for Amazon Elastic Container Service(ECS) like the AWS manageme
 * get ECS clusters
 
 ```console
-$ ecsctl get clusters
+$ ecswalk get clusters
 ```
 
 * get ECS services for specified ECS cluster
 
 ```console
-$ ecsctl get service -c default
+$ ecswalk get service -c default
 ```
 
 * get ECS tasks for specified ECS cluster and service
 
 ```console
-$ ecsctl get tasks -c default -s web-service
+$ ecswalk get tasks -c default -s web-service
 ```
 
 ### Get Information from ECS Interactively
@@ -29,13 +29,13 @@ $ ecsctl get tasks -c default -s web-service
 * get ECS services by selecting cluster interactively
 
 ```console
-$ ecsctl walk services
+$ ecswalk walk services
 ```
 
 * get ECS tasks by selecting cluster and service interactively
 
 ```console
-$ ecsctl walk tasks
+$ ecswalk walk tasks
 ```
 
 ### TODO: Run ECS task
@@ -44,5 +44,5 @@ $ ecsctl walk tasks
 * [ ] polling cloudwatch logs and task status
 
 ```console
-$ ecsctl run --c default --s web-service echo hello
+$ ecswalk run --c default --s web-service echo hello
 ```

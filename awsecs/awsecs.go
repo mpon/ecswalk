@@ -29,7 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/mpon/ecsctl/sliceutil"
+	"github.com/mpon/ecswalk/sliceutil"
 )
 
 // ListClusters to list clusters

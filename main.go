@@ -20,7 +20,7 @@
 
 package main
 
-import "github.com/mpon/ecsctl/cmd"
+import "github.com/mpon/ecswalk/cmd"
 
 func main() {
 	cmd.Execute()

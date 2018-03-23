@@ -25,7 +25,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/mpon/ecsctl/awsecs"
+	"github.com/mpon/ecswalk/awsecs"
 	"github.com/spf13/cobra"
 )
 
