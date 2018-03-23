@@ -91,7 +91,7 @@ func getServicesCmdRun(cluster string) {
 
 func init() {
 	getCmd.AddCommand(getServicesCmd)
-	getServicesCmd.Flags().StringVarP(&getServicesCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster)")
+	getServicesCmd.Flags().StringVarP(&getServicesCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
 	getServicesCmd.MarkFlagRequired("cluster")
 
 	// Here you will define your flags and configuration settings.

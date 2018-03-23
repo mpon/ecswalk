@@ -109,9 +109,9 @@ func describeTasks() ([]string, GetTaskRows) {
 
 func init() {
 	getCmd.AddCommand(getTasksCmd)
-	getTasksCmd.Flags().StringVarP(&getTasksCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster)")
+	getTasksCmd.Flags().StringVarP(&getTasksCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
 	getTasksCmd.MarkFlagRequired("cluster")
-	getTasksCmd.Flags().StringVarP(&getTasksCmdFlagService, "service", "s", "", "AWS ECS cluster)")
+	getTasksCmd.Flags().StringVarP(&getTasksCmdFlagService, "service", "s", "", "AWS ECS service")
 	getTasksCmd.MarkFlagRequired("service")
 
 	// Here you will define your flags and configuration settings.
