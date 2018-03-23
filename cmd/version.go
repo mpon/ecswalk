@@ -26,12 +26,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const version = "0.0.5"
+
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of ecsctl",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("ecsctl version 0.0.4")
+		fmt.Printf("ecsctl version %s\n", version)
 	},
 }
 
