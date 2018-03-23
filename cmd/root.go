@@ -23,7 +23,9 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/manifoldco/promptui"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -85,5 +87,19 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+}
+
+func newPrompt(elements []string, label string) promptui.Select {
+	searcher := func(input string, index int) bool {
+		cluster := strings.ToLower(elements[index])
+		return strings.Contains(cluster, input)
+	}
+
+	return promptui.Select{
+		Label:    label,
+		Items:    elements,
+		Size:     20,
+		Searcher: searcher,
 	}
 }
