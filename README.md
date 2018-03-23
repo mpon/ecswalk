@@ -1,6 +1,6 @@
 # ecsctl
 
-A convert tool from AWS Elastic Container Service(ECS) to kubernetes manifest.
+Show information for Amazon Elastic Container Service(ECS) like the AWS management console.
 
 ## Usage
 
@@ -32,10 +32,4 @@ TODO: polling cloudwatch logs and task status
 
 ```console
 $ ecsctl run --cluster default --service web-service echo hello
-```
-
-### TODO: Convert ECS service to a kubernetes manifest
-
-```console
-$ ecsctl convert --cluster default --service --web-service
 ```
