@@ -27,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/spf13/viper"
 )
 
 // DescribeInstances to describe instances
@@ -55,6 +56,15 @@ func DescribeInstances(instanceIds []string) *ec2.DescribeInstancesOutput {
 }
 
 func newSvc() *ec2.EC2 {
+	if viper.IsSet("profile") {
+		cfg, err := external.LoadDefaultAWSConfig(
+			external.WithSharedConfigProfile(viper.GetString("profile")),
+		)
+		if err != nil {
+			panic("failed to load config, " + err.Error())
+		}
+		return ec2.New(cfg)
+	}
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
 		panic("failed to load config, " + err.Error())

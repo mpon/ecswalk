@@ -57,7 +57,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ecswalk.yaml)")
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is .ecswalk.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -78,16 +78,13 @@ func initConfig() {
 		}
 
 		// Search config in home directory with name ".ecswalk" (without extension).
+		viper.AddConfigPath(".")
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".ecswalk")
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	// viper.AutomaticEnv() // read in environment variables that match
+	viper.ReadInConfig() // If a config file is found, read it in.
 }
 
 func newPrompt(elements []string, label string) promptui.Select {

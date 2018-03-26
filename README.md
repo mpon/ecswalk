@@ -46,3 +46,12 @@ $ ecswalk walk tasks
 ```console
 $ ecswalk run --c default --s web-service echo hello
 ```
+
+
+## Options
+
+* you can set aws configure profile by `.ecswalk.yaml`
+
+```yaml
+profile: my-aws
+```

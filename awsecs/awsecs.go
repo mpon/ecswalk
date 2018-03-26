@@ -30,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecswalk/sliceutil"
+	"github.com/spf13/viper"
 )
 
 // ListClusters to list clusters
@@ -352,6 +353,15 @@ func DescribeContainerInstances(cluster string, containerInstances []string) *ec
 }
 
 func newSvc() *ecs.ECS {
+	if viper.IsSet("profile") {
+		cfg, err := external.LoadDefaultAWSConfig(
+			external.WithSharedConfigProfile(viper.GetString("profile")),
+		)
+		if err != nil {
+			panic("failed to load config, " + err.Error())
+		}
+		return ecs.New(cfg)
+	}
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
 		panic("failed to load config, " + err.Error())
