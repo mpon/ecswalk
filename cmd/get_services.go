@@ -55,21 +55,23 @@ func getServicesCmdRun(cluster string) {
 	describeTaskDefinitionOutputs := awsecs.DescribeTaskDefinitions(cluster, serviceArns)
 
 	rows := GetServiceRows{}
-	for _, describeTaskDefinitionOutput := range describeTaskDefinitionOutputs {
-		taskDefinition := *describeTaskDefinitionOutput.TaskDefinition.TaskDefinitionArn
-		service := awsecs.FindService(services, taskDefinition)
-
-		for _, containerDefinition := range describeTaskDefinitionOutput.TaskDefinition.ContainerDefinitions {
+	for _, service := range services {
+		td := ecs.TaskDefinition{}
+		for _, describeTaskDefinitionOutput := range describeTaskDefinitionOutputs {
+			if *service.TaskDefinition == *describeTaskDefinitionOutput.TaskDefinition.TaskDefinitionArn {
+				td = *describeTaskDefinitionOutput.TaskDefinition
+			}
+		}
+		for _, containerDefinition := range td.ContainerDefinitions {
 			image, tag := awsecs.ShortDockerImage(*containerDefinition.Image)
 			rows = append(rows, GetServiceRow{
 				Name:           *service.ServiceName,
-				TaskDefinition: awsecs.ShortArn(taskDefinition),
+				TaskDefinition: awsecs.ShortArn(*td.TaskDefinitionArn),
 				Image:          image,
 				Tag:            tag,
 				DesiredCount:   *service.DesiredCount,
 				RunningCount:   *service.RunningCount,
 			})
-
 		}
 	}
 	sort.Sort(rows)
