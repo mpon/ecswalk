@@ -21,6 +21,7 @@
 package awsec2
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -38,7 +39,7 @@ func DescribeInstances(instanceIds []string) *ec2.DescribeInstancesOutput {
 	}
 
 	req := svc.DescribeInstancesRequest(input)
-	result, err := req.Send()
+	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {

@@ -21,6 +21,7 @@
 package awsecs
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sync"
@@ -39,7 +40,7 @@ func ListClusters() *ecs.ListClustersOutput {
 	input := &ecs.ListClustersInput{}
 
 	req := svc.ListClustersRequest(input)
-	result, err := req.Send()
+	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -70,7 +71,7 @@ func DescribeClusters(clusterArns []string) *ecs.DescribeClustersOutput {
 	}
 
 	req := svc.DescribeClustersRequest(input)
-	result, err := req.Send()
+	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -135,7 +136,7 @@ func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOu
 	}
 
 	req := svc.DescribeServicesRequest(input)
-	result, err := req.Send()
+	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -194,7 +195,7 @@ func DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitio
 	}
 
 	req := svc.DescribeTaskDefinitionRequest(input)
-	result, err := req.Send()
+	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -257,7 +258,7 @@ func ListTasks(cluster string, service string) *ecs.ListTasksOutput {
 	}
 
 	req := svc.ListTasksRequest(input)
-	result, err := req.Send()
+	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -293,7 +294,7 @@ func DescribeTasks(cluster string, tasks []string) *ecs.DescribeTasksOutput {
 	}
 
 	req := svc.DescribeTasksRequest(input)
-	result, err := req.Send()
+	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -327,7 +328,7 @@ func DescribeContainerInstances(cluster string, containerInstances []string) *ec
 	}
 
 	req := svc.DescribeContainerInstancesRequest(input)
-	result, err := req.Send()
+	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -382,7 +383,7 @@ func listServices(cluster string, svc *ecs.ECS, nextToken *string, outputs []*ec
 	}
 
 	req := svc.ListServicesRequest(input)
-	result, err := req.Send()
+	result, err := req.Send(context.Background())
 
 	if err != nil {
 		return nil, err
