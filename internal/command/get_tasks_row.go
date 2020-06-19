@@ -1,4 +1,4 @@
-package cmd
+package command
 
 // GetTaskRow represents output each row
 type GetTaskRow struct {

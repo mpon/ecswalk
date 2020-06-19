@@ -1,4 +1,4 @@
-package cmd
+package command
 
 import (
 	"fmt"
@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var walkTasksCmd = &cobra.Command{
-	Use:   "tasks",
-	Short: "describe ECS tasks by selecting cluster and service interactively",
+var walkServicesCmd = &cobra.Command{
+	Use:   "services",
+	Short: "describe ECS services by selecting cluster interactively",
 	Run: func(cmd *cobra.Command, args []string) {
 		listClustersOutput := awsecs.ListClusters()
 		clusterNames := []string{}
@@ -23,28 +23,12 @@ var walkTasksCmd = &cobra.Command{
 			fmt.Printf("Prompt failed %v\n", err)
 			return
 		}
-
-		describeServicesOutputs := awsecs.DescribeAllServices(cluster)
-		serviceNames := []string{}
-		for _, describeServiceOutput := range describeServicesOutputs {
-			for _, service := range describeServiceOutput.Services {
-				serviceNames = append(serviceNames, awsecs.ShortArn(*service.ServiceArn))
-			}
-		}
-
-		prompt2 := newPrompt(serviceNames, "Select Service")
-		_, service, err := prompt2.Run()
-		if err != nil {
-			fmt.Printf("Prompt failed %v\n", err)
-			return
-		}
-
-		getTasksCmdRun(cluster, service)
+		getServicesCmdRun(cluster)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(walkTasksCmd)
+	rootCmd.AddCommand(walkServicesCmd)
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

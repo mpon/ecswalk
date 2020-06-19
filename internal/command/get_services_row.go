@@ -1,4 +1,4 @@
-package cmd
+package command
 
 // GetServiceRow represents output each row
 type GetServiceRow struct {

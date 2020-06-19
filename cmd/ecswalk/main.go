@@ -1,7 +1,7 @@
 package main
 
-import "github.com/mpon/ecswalk/cmd"
+import "github.com/mpon/ecswalk/internal/command"
 
 func main() {
-	cmd.Execute()
+	command.Execute()
 }

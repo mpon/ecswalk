@@ -1,4 +1,4 @@
-package cmd
+package command
 
 // InstanceData represents Container Instance and EC2 instance information
 type InstanceData struct {
