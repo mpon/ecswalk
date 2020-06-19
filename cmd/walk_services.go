@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/mpon/ecswalk/awsecs"
+	"github.com/mpon/ecswalk/internal/pkg/awsecs"
 	"github.com/spf13/cobra"
 )
 

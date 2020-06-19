@@ -6,8 +6,8 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	"github.com/mpon/ecswalk/awsec2"
-	"github.com/mpon/ecswalk/awsecs"
+	"github.com/mpon/ecswalk/internal/pkg/awsec2"
+	"github.com/mpon/ecswalk/internal/pkg/awsecs"
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"github.com/spf13/cobra"
 )

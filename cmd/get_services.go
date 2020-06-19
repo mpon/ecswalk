@@ -7,7 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/mpon/ecswalk/awsecs"
+	"github.com/mpon/ecswalk/internal/pkg/awsecs"
 	"github.com/spf13/cobra"
 )
 
