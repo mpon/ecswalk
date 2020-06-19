@@ -26,8 +26,8 @@ func ListClusters() *ecs.ListClustersOutput {
 			switch aerr.Code() {
 			case ecs.ErrCodeServerException:
 				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeException:
+				fmt.Println(ecs.ErrCodeException, aerr.Error())
 			case ecs.ErrCodeInvalidParameterException:
 				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
 			default:
@@ -40,7 +40,7 @@ func ListClusters() *ecs.ListClustersOutput {
 		}
 		os.Exit(1)
 	}
-	return result
+	return result.ListClustersOutput
 }
 
 // DescribeClusters to describe a cluster
@@ -57,8 +57,8 @@ func DescribeClusters(clusterArns []string) *ecs.DescribeClustersOutput {
 			switch aerr.Code() {
 			case ecs.ErrCodeServerException:
 				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeException:
+				fmt.Println(ecs.ErrCodeException, aerr.Error())
 			case ecs.ErrCodeInvalidParameterException:
 				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
 			default:
@@ -71,7 +71,7 @@ func DescribeClusters(clusterArns []string) *ecs.DescribeClustersOutput {
 		}
 		os.Exit(1)
 	}
-	return result
+	return result.DescribeClustersOutput
 }
 
 // ListServices to list ECS Service recursively
@@ -85,8 +85,8 @@ func ListServices(cluster string) []*ecs.ListServicesOutput {
 			switch aerr.Code() {
 			case ecs.ErrCodeServerException:
 				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeException:
+				fmt.Println(ecs.ErrCodeException, aerr.Error())
 			case ecs.ErrCodeInvalidParameterException:
 				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
 			case ecs.ErrCodeClusterNotFoundException:
@@ -122,8 +122,8 @@ func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOu
 			switch aerr.Code() {
 			case ecs.ErrCodeServerException:
 				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeException:
+				fmt.Println(ecs.ErrCodeException, aerr.Error())
 			case ecs.ErrCodeInvalidParameterException:
 				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
 			case ecs.ErrCodeClusterNotFoundException:
@@ -138,7 +138,7 @@ func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOu
 		}
 		os.Exit(1)
 	}
-	return result
+	return result.DescribeServicesOutput
 }
 
 // DescribeAllServices to describe all ECS services specified cluster
@@ -181,8 +181,8 @@ func DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitio
 			switch aerr.Code() {
 			case ecs.ErrCodeServerException:
 				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeException:
+				fmt.Println(ecs.ErrCodeException, aerr.Error())
 			case ecs.ErrCodeInvalidParameterException:
 				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
 			default:
@@ -195,7 +195,7 @@ func DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitio
 		}
 		os.Exit(1)
 	}
-	return result
+	return result.DescribeTaskDefinitionOutput
 }
 
 // DescribeTaskDefinitions describe with task definition about all services
@@ -244,8 +244,8 @@ func ListTasks(cluster string, service string) *ecs.ListTasksOutput {
 			switch aerr.Code() {
 			case ecs.ErrCodeServerException:
 				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeException:
+				fmt.Println(ecs.ErrCodeException, aerr.Error())
 			case ecs.ErrCodeInvalidParameterException:
 				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
 			case ecs.ErrCodeClusterNotFoundException:
@@ -262,7 +262,7 @@ func ListTasks(cluster string, service string) *ecs.ListTasksOutput {
 		}
 		os.Exit(1)
 	}
-	return result
+	return result.ListTasksOutput
 }
 
 // DescribeTasks to describe specified cluster and tasks
@@ -280,8 +280,8 @@ func DescribeTasks(cluster string, tasks []string) *ecs.DescribeTasksOutput {
 			switch aerr.Code() {
 			case ecs.ErrCodeServerException:
 				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeException:
+				fmt.Println(ecs.ErrCodeException, aerr.Error())
 			case ecs.ErrCodeInvalidParameterException:
 				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
 			case ecs.ErrCodeClusterNotFoundException:
@@ -296,7 +296,7 @@ func DescribeTasks(cluster string, tasks []string) *ecs.DescribeTasksOutput {
 		}
 		os.Exit(1)
 	}
-	return result
+	return result.DescribeTasksOutput
 }
 
 // DescribeContainerInstances to describe container instances
@@ -314,8 +314,8 @@ func DescribeContainerInstances(cluster string, containerInstances []string) *ec
 			switch aerr.Code() {
 			case ecs.ErrCodeServerException:
 				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeClientException:
-				fmt.Println(ecs.ErrCodeClientException, aerr.Error())
+			case ecs.ErrCodeException:
+				fmt.Println(ecs.ErrCodeException, aerr.Error())
 			case ecs.ErrCodeInvalidParameterException:
 				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
 			case ecs.ErrCodeClusterNotFoundException:
@@ -330,10 +330,10 @@ func DescribeContainerInstances(cluster string, containerInstances []string) *ec
 		}
 		os.Exit(1)
 	}
-	return result
+	return result.DescribeContainerInstancesOutput
 }
 
-func newSvc() *ecs.ECS {
+func newSvc() *ecs.Client {
 	if viper.IsSet("profile") {
 		cfg, err := external.LoadDefaultAWSConfig(
 			external.WithSharedConfigProfile(viper.GetString("profile")),
@@ -350,7 +350,7 @@ func newSvc() *ecs.ECS {
 	return ecs.New(cfg)
 }
 
-func listServices(cluster string, svc *ecs.ECS, nextToken *string, outputs []*ecs.ListServicesOutput) ([]*ecs.ListServicesOutput, error) {
+func listServices(cluster string, svc *ecs.Client, nextToken *string, outputs []*ecs.ListServicesOutput) ([]*ecs.ListServicesOutput, error) {
 	input := &ecs.ListServicesInput{
 		Cluster: aws.String(cluster),
 	}
@@ -369,7 +369,7 @@ func listServices(cluster string, svc *ecs.ECS, nextToken *string, outputs []*ec
 		return nil, err
 	}
 
-	outputs = append(outputs, result)
+	outputs = append(outputs, result.ListServicesOutput)
 
 	if result.NextToken != nil {
 		return listServices(cluster, svc, result.NextToken, outputs)

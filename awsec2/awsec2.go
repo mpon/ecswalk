@@ -33,10 +33,10 @@ func DescribeInstances(instanceIds []string) *ec2.DescribeInstancesOutput {
 		}
 		os.Exit(1)
 	}
-	return result
+	return result.DescribeInstancesOutput
 }
 
-func newSvc() *ec2.EC2 {
+func newSvc() *ec2.Client {
 	if viper.IsSet("profile") {
 		cfg, err := external.LoadDefaultAWSConfig(
 			external.WithSharedConfigProfile(viper.GetString("profile")),
