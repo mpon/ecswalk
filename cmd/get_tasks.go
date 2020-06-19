@@ -8,7 +8,7 @@ import (
 
 	"github.com/mpon/ecswalk/awsec2"
 	"github.com/mpon/ecswalk/awsecs"
-	"github.com/mpon/ecswalk/sliceutil"
+	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"github.com/spf13/cobra"
 )
 

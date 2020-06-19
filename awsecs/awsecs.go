@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/mpon/ecswalk/sliceutil"
+	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"github.com/spf13/viper"
 )
 
