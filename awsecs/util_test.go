@@ -61,10 +61,10 @@ func TestShortDockerImageWithoutTag(t *testing.T) {
 func TestFindService(t *testing.T) {
 	taskDefinition := "arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:8"
 	services := []ecs.Service{
-		ecs.Service{
+		{
 			TaskDefinition: aws.String(taskDefinition),
 		},
-		ecs.Service{
+		{
 			TaskDefinition: aws.String("arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:9"),
 		},
 	}
@@ -80,10 +80,10 @@ func TestFindService(t *testing.T) {
 func TestFindServiceNothing(t *testing.T) {
 	taskDefinition := "arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:8"
 	services := []ecs.Service{
-		ecs.Service{
+		{
 			TaskDefinition: aws.String("arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:7"),
 		},
-		ecs.Service{
+		{
 			TaskDefinition: aws.String("arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:9"),
 		},
 	}
