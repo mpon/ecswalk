@@ -4,10 +4,13 @@ Show information for Amazon Elastic Container Service(ECS) like the AWS manageme
 
 ## Demo
 
-![_screenshot/services.gif](_screenshot/services.gif)
+### Fuzzy finder ECS Services
 
-![_screenshot/tasks.gif](_screenshot/tasks.gif)
+![docs/screenshot/services.gif](docs/screenshot/services.gif)
 
+### Fuzzy finder ECS Tasks
+
+![docs/screenshot/tasks.gif](docs/screenshot/tasks.gif)
 
 ## Usage
 
