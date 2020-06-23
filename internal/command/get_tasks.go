@@ -6,7 +6,7 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	"github.com/mpon/ecswalk/internal/pkg/awsec2"
+	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/mpon/ecswalk/internal/pkg/awsecs"
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"github.com/spf13/cobra"
@@ -19,12 +19,12 @@ var getTasksCmdFlagService string
 var getTasksCmd = &cobra.Command{
 	Use:   "tasks",
 	Short: "get Tasks specified service",
-	Run: func(cmd *cobra.Command, args []string) {
-		getTasksCmdRun(getTasksCmdFlagCluster, getTasksCmdFlagService)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return getTasksCmdRun(getTasksCmdFlagCluster, getTasksCmdFlagService)
 	},
 }
 
-func getTasksCmdRun(cluster string, service string) {
+func getTasksCmdRun(cluster string, service string) error {
 	containerInstanceArns, rows := describeTasks(cluster, service)
 	instanceDatas := NewInstanceDatas(containerInstanceArns)
 
@@ -36,7 +36,14 @@ func getTasksCmdRun(cluster string, service string) {
 	}
 	ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
 
-	describeInstancesOutput := awsec2.DescribeInstances(ec2InstanceIds)
+	client, err := awsapi.NewClient()
+	if err != nil {
+		return err
+	}
+	describeInstancesOutput, err := client.DescribeInstances(ec2InstanceIds)
+	if err != nil {
+		return err
+	}
 
 	for _, reservation := range describeInstancesOutput.Reservations {
 		for _, instance := range reservation.Instances {
@@ -68,6 +75,7 @@ func getTasksCmdRun(cluster string, service string) {
 		)
 	}
 	w.Flush()
+	return nil
 }
 
 func describeTasks(cluster string, service string) ([]string, GetTaskRows) {
