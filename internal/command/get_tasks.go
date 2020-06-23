@@ -39,7 +39,7 @@ func getTasksCmdRun(cluster string, service string) error {
 	}
 	ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
 
-	describeInstancesOutput, err := client.DescribeInstances(ec2InstanceIds)
+	describeInstancesOutput, err := client.DescribeEC2Instances(ec2InstanceIds)
 	if err != nil {
 		return err
 	}

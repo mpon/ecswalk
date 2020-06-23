@@ -7,7 +7,7 @@ import (
 )
 
 // DescribeInstances to describe instances
-func (client Client) DescribeInstances(instanceIds []string) (*ec2.DescribeInstancesOutput, error) {
+func (client Client) DescribeEC2Instances(instanceIds []string) (*ec2.DescribeInstancesOutput, error) {
 	input := &ec2.DescribeInstancesInput{
 		InstanceIds: instanceIds,
 	}
