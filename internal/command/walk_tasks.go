@@ -13,13 +13,13 @@ var walkTasksCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		listClustersOutput, err := client.ListECSClusters()
+		output, err := client.DescribeECSClusters()
 		if err != nil {
 			return err
 		}
 		clusterNames := []string{}
-		for _, clusterArn := range listClustersOutput.ClusterArns {
-			clusterNames = append(clusterNames, awsapi.ShortArn(clusterArn))
+		for _, cluster := range output.Clusters {
+			clusterNames = append(clusterNames, *cluster.ClusterName)
 		}
 
 		prompt := newPrompt(clusterNames, "Select Cluster")
