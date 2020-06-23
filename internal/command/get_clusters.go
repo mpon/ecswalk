@@ -18,7 +18,10 @@ var getClustersCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		listClustersOutput := client.ListClusters()
+		listClustersOutput, err := client.ListECSClusters()
+		if err != nil {
+			return err
+		}
 		describeClustersOutput := client.DescribeClusters(listClustersOutput.ClusterArns)
 
 		w := new(tabwriter.Writer)

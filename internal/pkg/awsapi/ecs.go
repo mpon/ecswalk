@@ -12,32 +12,15 @@ import (
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 )
 
-// ListClusters to list clusters
-func (client Client) ListClusters() *ecs.ListClustersOutput {
+// ListECSClusters to list ECS clusters
+func (client Client) ListECSClusters() (*ecs.ListClustersOutput, error) {
 	input := &ecs.ListClustersInput{}
-
 	req := client.ECSClient.ListClustersRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case ecs.ErrCodeServerException:
-				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeException:
-				fmt.Println(ecs.ErrCodeException, aerr.Error())
-			case ecs.ErrCodeInvalidParameterException:
-				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
-		os.Exit(1)
+		return nil, err
 	}
-	return result.ListClustersOutput
+	return result.ListClustersOutput, nil
 }
 
 // DescribeClusters to describe a cluster

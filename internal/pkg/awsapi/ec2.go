@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
-// DescribeInstances to describe instances
+// DescribeEC2Instances to describe instances
 func (client Client) DescribeEC2Instances(instanceIds []string) (*ec2.DescribeInstancesOutput, error) {
 	input := &ec2.DescribeInstancesInput{
 		InstanceIds: instanceIds,
