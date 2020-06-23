@@ -7,7 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/mpon/ecswalk/internal/pkg/awsecs"
+	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/spf13/cobra"
 )
 
@@ -17,13 +17,17 @@ var getServicesCmdFlagCluster string
 var getServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "get all ECS services specified cluster",
-	Run: func(cmd *cobra.Command, args []string) {
-		getServicesCmdRun(getServicesCmdFlagCluster)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return getServicesCmdRun(getServicesCmdFlagCluster)
 	},
 }
 
-func getServicesCmdRun(cluster string) {
-	describeServicesOutputs := awsecs.DescribeAllServices(cluster)
+func getServicesCmdRun(cluster string) error {
+	client, err := awsapi.NewClient()
+	if err != nil {
+		return err
+	}
+	describeServicesOutputs := client.DescribeAllServices(cluster)
 	services := []ecs.Service{}
 	serviceArns := []string{}
 	for _, describeServiceOutput := range describeServicesOutputs {
@@ -32,7 +36,7 @@ func getServicesCmdRun(cluster string) {
 			serviceArns = append(serviceArns, *service.ServiceArn)
 		}
 	}
-	describeTaskDefinitionOutputs := awsecs.DescribeTaskDefinitions(cluster, serviceArns)
+	describeTaskDefinitionOutputs := client.DescribeTaskDefinitions(cluster, serviceArns)
 
 	rows := GetServiceRows{}
 	for _, service := range services {
@@ -43,10 +47,10 @@ func getServicesCmdRun(cluster string) {
 			}
 		}
 		for _, containerDefinition := range td.ContainerDefinitions {
-			image, tag := awsecs.ShortDockerImage(*containerDefinition.Image)
+			image, tag := awsapi.ShortDockerImage(*containerDefinition.Image)
 			rows = append(rows, GetServiceRow{
 				Name:           *service.ServiceName,
-				TaskDefinition: awsecs.ShortArn(*td.TaskDefinitionArn),
+				TaskDefinition: awsapi.ShortArn(*td.TaskDefinitionArn),
 				Image:          image,
 				Tag:            tag,
 				DesiredCount:   *service.DesiredCount,
@@ -69,6 +73,7 @@ func getServicesCmdRun(cluster string) {
 			row.RunningCount)
 	}
 	w.Flush()
+	return nil
 }
 
 func init() {

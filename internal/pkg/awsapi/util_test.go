@@ -1,4 +1,4 @@
-package awsecs
+package awsapi
 
 import (
 	"reflect"

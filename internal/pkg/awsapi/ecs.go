@@ -1,4 +1,4 @@
-package awsecs
+package awsapi
 
 import (
 	"context"
@@ -8,18 +8,15 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/awserr"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
-	"github.com/spf13/viper"
 )
 
 // ListClusters to list clusters
-func ListClusters() *ecs.ListClustersOutput {
-	svc := newSvc()
+func (client Client) ListClusters() *ecs.ListClustersOutput {
 	input := &ecs.ListClustersInput{}
 
-	req := svc.ListClustersRequest(input)
+	req := client.ECSClient.ListClustersRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -44,13 +41,12 @@ func ListClusters() *ecs.ListClustersOutput {
 }
 
 // DescribeClusters to describe a cluster
-func DescribeClusters(clusterArns []string) *ecs.DescribeClustersOutput {
-	svc := newSvc()
+func (client Client) DescribeClusters(clusterArns []string) *ecs.DescribeClustersOutput {
 	input := &ecs.DescribeClustersInput{
 		Clusters: clusterArns,
 	}
 
-	req := svc.DescribeClustersRequest(input)
+	req := client.ECSClient.DescribeClustersRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -75,10 +71,9 @@ func DescribeClusters(clusterArns []string) *ecs.DescribeClustersOutput {
 }
 
 // ListServices to list ECS Service recursively
-func ListServices(cluster string) []*ecs.ListServicesOutput {
+func (client Client) ListServices(cluster string) []*ecs.ListServicesOutput {
 
-	svc := newSvc()
-	outputs, err := listServices(cluster, svc, nil, nil)
+	outputs, err := client.listServices(cluster, nil, nil)
 
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -106,16 +101,13 @@ func ListServices(cluster string) []*ecs.ListServicesOutput {
 }
 
 // DescribeServices to describe ECS services specified cluster and services
-func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOutput {
-
-	svc := newSvc()
-
+func (client Client) DescribeServices(cluster string, services []string) *ecs.DescribeServicesOutput {
 	input := &ecs.DescribeServicesInput{
 		Cluster:  aws.String(cluster),
 		Services: services,
 	}
 
-	req := svc.DescribeServicesRequest(input)
+	req := client.ECSClient.DescribeServicesRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -142,8 +134,8 @@ func DescribeServices(cluster string, services []string) *ecs.DescribeServicesOu
 }
 
 // DescribeAllServices to describe all ECS services specified cluster
-func DescribeAllServices(cluster string) []*ecs.DescribeServicesOutput {
-	listServiceOutputs := ListServices(cluster)
+func (client Client) DescribeAllServices(cluster string) []*ecs.DescribeServicesOutput {
+	listServiceOutputs := client.ListServices(cluster)
 	serviceArns := []string{}
 	for _, listServiceOutput := range listServiceOutputs {
 		for _, serviceArn := range listServiceOutput.ServiceArns {
@@ -159,7 +151,7 @@ func DescribeAllServices(cluster string) []*ecs.DescribeServicesOutput {
 		wg.Add(1)
 		go func(c []string) {
 			defer wg.Done()
-			describeServicesOutput := DescribeServices(cluster, c)
+			describeServicesOutput := client.DescribeServices(cluster, c)
 			describeServicesOutputs = append(describeServicesOutputs, describeServicesOutput)
 		}(chunkedServices)
 	}
@@ -168,13 +160,12 @@ func DescribeAllServices(cluster string) []*ecs.DescribeServicesOutput {
 }
 
 // DescribeTaskDefinition to describe specified task definition
-func DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitionOutput {
-	svc := newSvc()
+func (client Client) DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitionOutput {
 	input := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(taskDefinitionArn),
 	}
 
-	req := svc.DescribeTaskDefinitionRequest(input)
+	req := client.ECSClient.DescribeTaskDefinitionRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -199,7 +190,7 @@ func DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitio
 }
 
 // DescribeTaskDefinitions describe with task definition about all services
-func DescribeTaskDefinitions(cluster string, services []string) []*ecs.DescribeTaskDefinitionOutput {
+func (client Client) DescribeTaskDefinitions(cluster string, services []string) []*ecs.DescribeTaskDefinitionOutput {
 	const maxAPILimitChunkSize = 10
 	taskDefinitions := []string{}
 	outputs := []*ecs.DescribeTaskDefinitionOutput{}
@@ -209,7 +200,7 @@ func DescribeTaskDefinitions(cluster string, services []string) []*ecs.DescribeT
 		wg.Add(1)
 		go func(c []string) {
 			defer wg.Done()
-			describeServicesOutput := DescribeServices(cluster, c)
+			describeServicesOutput := client.DescribeServices(cluster, c)
 			for _, service := range describeServicesOutput.Services {
 				taskDefinitions = append(taskDefinitions, *service.TaskDefinition)
 			}
@@ -221,7 +212,7 @@ func DescribeTaskDefinitions(cluster string, services []string) []*ecs.DescribeT
 		wg.Add(1)
 		go func(t string) {
 			defer wg.Done()
-			outputs = append(outputs, DescribeTaskDefinition(t))
+			outputs = append(outputs, client.DescribeTaskDefinition(t))
 		}(t)
 	}
 	wg.Wait()
@@ -230,14 +221,13 @@ func DescribeTaskDefinitions(cluster string, services []string) []*ecs.DescribeT
 }
 
 // ListTasks to list specified cluster
-func ListTasks(cluster string, service string) *ecs.ListTasksOutput {
-	svc := newSvc()
+func (client Client) ListTasks(cluster string, service string) *ecs.ListTasksOutput {
 	input := &ecs.ListTasksInput{
 		Cluster:     aws.String(cluster),
 		ServiceName: aws.String(service),
 	}
 
-	req := svc.ListTasksRequest(input)
+	req := client.ECSClient.ListTasksRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -266,14 +256,13 @@ func ListTasks(cluster string, service string) *ecs.ListTasksOutput {
 }
 
 // DescribeTasks to describe specified cluster and tasks
-func DescribeTasks(cluster string, tasks []string) *ecs.DescribeTasksOutput {
-	svc := newSvc()
+func (client Client) DescribeTasks(cluster string, tasks []string) *ecs.DescribeTasksOutput {
 	input := &ecs.DescribeTasksInput{
 		Cluster: aws.String(cluster),
 		Tasks:   tasks,
 	}
 
-	req := svc.DescribeTasksRequest(input)
+	req := client.ECSClient.DescribeTasksRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -300,14 +289,13 @@ func DescribeTasks(cluster string, tasks []string) *ecs.DescribeTasksOutput {
 }
 
 // DescribeContainerInstances to describe container instances
-func DescribeContainerInstances(cluster string, containerInstances []string) *ecs.DescribeContainerInstancesOutput {
-	svc := newSvc()
+func (client Client) DescribeContainerInstances(cluster string, containerInstances []string) *ecs.DescribeContainerInstancesOutput {
 	input := &ecs.DescribeContainerInstancesInput{
 		Cluster:            aws.String(cluster),
 		ContainerInstances: containerInstances,
 	}
 
-	req := svc.DescribeContainerInstancesRequest(input)
+	req := client.ECSClient.DescribeContainerInstancesRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -333,24 +321,7 @@ func DescribeContainerInstances(cluster string, containerInstances []string) *ec
 	return result.DescribeContainerInstancesOutput
 }
 
-func newSvc() *ecs.Client {
-	if viper.IsSet("profile") {
-		cfg, err := external.LoadDefaultAWSConfig(
-			external.WithSharedConfigProfile(viper.GetString("profile")),
-		)
-		if err != nil {
-			panic("failed to load config, " + err.Error())
-		}
-		return ecs.New(cfg)
-	}
-	cfg, err := external.LoadDefaultAWSConfig()
-	if err != nil {
-		panic("failed to load config, " + err.Error())
-	}
-	return ecs.New(cfg)
-}
-
-func listServices(cluster string, svc *ecs.Client, nextToken *string, outputs []*ecs.ListServicesOutput) ([]*ecs.ListServicesOutput, error) {
+func (client Client) listServices(cluster string, nextToken *string, outputs []*ecs.ListServicesOutput) ([]*ecs.ListServicesOutput, error) {
 	input := &ecs.ListServicesInput{
 		Cluster: aws.String(cluster),
 	}
@@ -362,7 +333,7 @@ func listServices(cluster string, svc *ecs.Client, nextToken *string, outputs []
 		}
 	}
 
-	req := svc.ListServicesRequest(input)
+	req := client.ECSClient.ListServicesRequest(input)
 	result, err := req.Send(context.Background())
 
 	if err != nil {
@@ -372,7 +343,7 @@ func listServices(cluster string, svc *ecs.Client, nextToken *string, outputs []
 	outputs = append(outputs, result.ListServicesOutput)
 
 	if result.NextToken != nil {
-		return listServices(cluster, svc, result.NextToken, outputs)
+		return client.listServices(cluster, result.NextToken, outputs)
 	}
 	return outputs, nil
 }

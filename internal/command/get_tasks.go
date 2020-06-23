@@ -7,7 +7,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
-	"github.com/mpon/ecswalk/internal/pkg/awsecs"
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"github.com/spf13/cobra"
 )
@@ -28,18 +27,18 @@ func getTasksCmdRun(cluster string, service string) error {
 	containerInstanceArns, rows := describeTasks(cluster, service)
 	instanceDatas := NewInstanceDatas(containerInstanceArns)
 
+	client, err := awsapi.NewClient()
+	if err != nil {
+		return err
+	}
 	ec2InstanceIds := []string{}
-	describeContainerInstancesOutput := awsecs.DescribeContainerInstances(cluster, containerInstanceArns)
+	describeContainerInstancesOutput := client.DescribeContainerInstances(cluster, containerInstanceArns)
 	for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
 		instanceDatas.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
 		ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
 	}
 	ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
 
-	client, err := awsapi.NewClient()
-	if err != nil {
-		return err
-	}
 	describeInstancesOutput, err := client.DescribeInstances(ec2InstanceIds)
 	if err != nil {
 		return err
@@ -79,16 +78,21 @@ func getTasksCmdRun(cluster string, service string) error {
 }
 
 func describeTasks(cluster string, service string) ([]string, GetTaskRows) {
+	// TODO: err handling
+	client, _ := awsapi.NewClient()
+	// if err != nil {
+	// 	return err
+	// }
 	containerInstanceArns := []string{}
 	rows := GetTaskRows{}
 
-	listTasksOutput := awsecs.ListTasks(cluster, service)
-	describeTasksOutput := awsecs.DescribeTasks(cluster, listTasksOutput.TaskArns)
+	listTasksOutput := client.ListTasks(cluster, service)
+	describeTasksOutput := client.DescribeTasks(cluster, listTasksOutput.TaskArns)
 
 	for _, task := range describeTasksOutput.Tasks {
 		rows = append(rows, &GetTaskRow{
-			TaskID:               awsecs.ShortArn(*task.TaskArn),
-			TaskDefinition:       awsecs.ShortArn(*task.TaskDefinitionArn),
+			TaskID:               awsapi.ShortArn(*task.TaskArn),
+			TaskDefinition:       awsapi.ShortArn(*task.TaskDefinitionArn),
 			Status:               *task.LastStatus,
 			ContainerInstanceArn: *task.ContainerInstanceArn,
 		})

@@ -3,27 +3,32 @@ package command
 import (
 	"fmt"
 
-	"github.com/mpon/ecswalk/internal/pkg/awsecs"
+	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/spf13/cobra"
 )
 
 var walkServicesCmd = &cobra.Command{
 	Use:   "services",
 	Short: "describe ECS services by selecting cluster interactively",
-	Run: func(cmd *cobra.Command, args []string) {
-		listClustersOutput := awsecs.ListClusters()
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := awsapi.NewClient()
+		if err != nil {
+			return err
+		}
+		listClustersOutput := client.ListClusters()
 		clusterNames := []string{}
 		for _, clusterArn := range listClustersOutput.ClusterArns {
-			clusterNames = append(clusterNames, awsecs.ShortArn(clusterArn))
+			clusterNames = append(clusterNames, awsapi.ShortArn(clusterArn))
 		}
 
 		prompt := newPrompt(clusterNames, "Select Cluster")
 		_, cluster, err := prompt.Run()
 		if err != nil {
 			fmt.Printf("Prompt failed %v\n", err)
-			return
+			return err
 		}
 		getServicesCmdRun(cluster)
+		return nil
 	},
 }
 

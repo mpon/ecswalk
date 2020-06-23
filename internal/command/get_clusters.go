@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/mpon/ecswalk/internal/pkg/awsecs"
+	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/spf13/cobra"
 )
 
@@ -13,9 +13,13 @@ import (
 var getClustersCmd = &cobra.Command{
 	Use:   "clusters",
 	Short: "get ECS clusters",
-	Run: func(cmd *cobra.Command, args []string) {
-		listClustersOutput := awsecs.ListClusters()
-		describeClustersOutput := awsecs.DescribeClusters(listClustersOutput.ClusterArns)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := awsapi.NewClient()
+		if err != nil {
+			return err
+		}
+		listClustersOutput := client.ListClusters()
+		describeClustersOutput := client.DescribeClusters(listClustersOutput.ClusterArns)
 
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 8, 1, '\t', 0)
@@ -29,6 +33,7 @@ var getClustersCmd = &cobra.Command{
 				*cluster.RegisteredContainerInstancesCount)
 		}
 		w.Flush()
+		return nil
 	},
 }
 
