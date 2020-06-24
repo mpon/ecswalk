@@ -8,8 +8,8 @@ import (
 func TestChunkedSlice(t *testing.T) {
 	slice := []string{"a", "b", "c", "a", "b"}
 	expect := [][]string{
-		[]string{"a", "b", "c"},
-		[]string{"a", "b"},
+		{"a", "b", "c"},
+		{"a", "b"},
 	}
 	result := ChunkedSlice(slice, 3)
 
