@@ -35,7 +35,10 @@ func getTasksCmdRun(cluster string, service string) error {
 		return err
 	}
 	ec2InstanceIds := []string{}
-	describeContainerInstancesOutput := client.DescribeContainerInstances(cluster, containerInstanceArns)
+	describeContainerInstancesOutput, err := client.DescribeContainerInstances(cluster, containerInstanceArns)
+	if err != nil {
+		return err
+	}
 	for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
 		instanceDatas.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
 		ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
@@ -92,7 +95,10 @@ func describeTasks(cluster string, service string) ([]string, GetTaskRows, error
 	if err != nil {
 		return []string{}, GetTaskRows{}, err
 	}
-	describeTasksOutput := client.DescribeTasks(cluster, listTasksOutput.TaskArns)
+	describeTasksOutput, err := client.DescribeTasks(cluster, listTasksOutput.TaskArns)
+	if err != nil {
+		return []string{}, GetTaskRows{}, err
+	}
 
 	for _, task := range describeTasksOutput.Tasks {
 		rows = append(rows, &GetTaskRow{

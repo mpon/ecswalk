@@ -2,11 +2,8 @@ package awsapi
 
 import (
 	"context"
-	"fmt"
-	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"golang.org/x/sync/errgroup"
@@ -145,7 +142,7 @@ func (client Client) ListECSTasks(cluster string, service string) (*ecs.ListTask
 }
 
 // DescribeTasks to describe specified cluster and tasks
-func (client Client) DescribeTasks(cluster string, tasks []string) *ecs.DescribeTasksOutput {
+func (client Client) DescribeTasks(cluster string, tasks []string) (*ecs.DescribeTasksOutput, error) {
 	input := &ecs.DescribeTasksInput{
 		Cluster: aws.String(cluster),
 		Tasks:   tasks,
@@ -154,31 +151,13 @@ func (client Client) DescribeTasks(cluster string, tasks []string) *ecs.Describe
 	req := client.ECSClient.DescribeTasksRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case ecs.ErrCodeServerException:
-				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeException:
-				fmt.Println(ecs.ErrCodeException, aerr.Error())
-			case ecs.ErrCodeInvalidParameterException:
-				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
-			case ecs.ErrCodeClusterNotFoundException:
-				fmt.Println(ecs.ErrCodeClusterNotFoundException, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
-		os.Exit(1)
+		return nil, err
 	}
-	return result.DescribeTasksOutput
+	return result.DescribeTasksOutput, nil
 }
 
 // DescribeContainerInstances to describe container instances
-func (client Client) DescribeContainerInstances(cluster string, containerInstances []string) *ecs.DescribeContainerInstancesOutput {
+func (client Client) DescribeContainerInstances(cluster string, containerInstances []string) (*ecs.DescribeContainerInstancesOutput, error) {
 	input := &ecs.DescribeContainerInstancesInput{
 		Cluster:            aws.String(cluster),
 		ContainerInstances: containerInstances,
@@ -187,27 +166,9 @@ func (client Client) DescribeContainerInstances(cluster string, containerInstanc
 	req := client.ECSClient.DescribeContainerInstancesRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case ecs.ErrCodeServerException:
-				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeException:
-				fmt.Println(ecs.ErrCodeException, aerr.Error())
-			case ecs.ErrCodeInvalidParameterException:
-				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
-			case ecs.ErrCodeClusterNotFoundException:
-				fmt.Println(ecs.ErrCodeClusterNotFoundException, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
-		os.Exit(1)
+		return nil, err
 	}
-	return result.DescribeContainerInstancesOutput
+	return result.DescribeContainerInstancesOutput, nil
 }
 
 func (client Client) listECSServicesRecursively(cluster string) ([]*ecs.ListServicesOutput, error) {
