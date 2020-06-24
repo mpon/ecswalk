@@ -88,7 +88,10 @@ func describeTasks(cluster string, service string) ([]string, GetTaskRows, error
 	containerInstanceArns := []string{}
 	rows := GetTaskRows{}
 
-	listTasksOutput := client.ListTasks(cluster, service)
+	listTasksOutput, err := client.ListECSTasks(cluster, service)
+	if err != nil {
+		return []string{}, GetTaskRows{}, err
+	}
 	describeTasksOutput := client.DescribeTasks(cluster, listTasksOutput.TaskArns)
 
 	for _, task := range describeTasksOutput.Tasks {

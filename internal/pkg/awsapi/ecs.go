@@ -93,31 +93,18 @@ func (client Client) DescribeTaskDefinitions(cluster string, services []string) 
 	taskDefinitions := []string{}
 	outputs := []*ecs.DescribeTaskDefinitionOutput{}
 
-	eg, ctx := errgroup.WithContext(context.Background())
-	for _, s := range sliceutil.ChunkedSlice(services, maxAPILimitChunkSize) {
-		s := s
-		eg.Go(func() error {
-			describeServicesOutput, err := client.describeECSServices(cluster, s)
-
-			select {
-			case <-ctx.Done():
-				return nil
-			default:
-				if err != nil {
-					return err
-				}
-				for _, service := range describeServicesOutput.Services {
-					taskDefinitions = append(taskDefinitions, *service.TaskDefinition)
-				}
-				return nil
-			}
-		})
-	}
-
-	if err := eg.Wait(); err != nil {
+	describeServicesOutput, err := client.DescribeAllECSServices(cluster)
+	if err != nil {
 		return nil, err
 	}
 
+	for _, o := range describeServicesOutput {
+		for _, s := range o.Services {
+			taskDefinitions = append(taskDefinitions, *s.TaskDefinition)
+		}
+	}
+
+	eg, ctx := errgroup.WithContext(context.Background())
 	for _, t := range taskDefinitions {
 		t := t
 		eg.Go(func() error {
@@ -142,8 +129,8 @@ func (client Client) DescribeTaskDefinitions(cluster string, services []string) 
 	return outputs, nil
 }
 
-// ListTasks to list specified cluster
-func (client Client) ListTasks(cluster string, service string) *ecs.ListTasksOutput {
+// ListECSTasks to list tasks of specified cluster and service
+func (client Client) ListECSTasks(cluster string, service string) (*ecs.ListTasksOutput, error) {
 	input := &ecs.ListTasksInput{
 		Cluster:     aws.String(cluster),
 		ServiceName: aws.String(service),
@@ -152,29 +139,9 @@ func (client Client) ListTasks(cluster string, service string) *ecs.ListTasksOut
 	req := client.ECSClient.ListTasksRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case ecs.ErrCodeServerException:
-				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeException:
-				fmt.Println(ecs.ErrCodeException, aerr.Error())
-			case ecs.ErrCodeInvalidParameterException:
-				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
-			case ecs.ErrCodeClusterNotFoundException:
-				fmt.Println(ecs.ErrCodeClusterNotFoundException, aerr.Error())
-			case ecs.ErrCodeServiceNotFoundException:
-				fmt.Println(ecs.ErrCodeServiceNotFoundException, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
-		os.Exit(1)
+		return nil, err
 	}
-	return result.ListTasksOutput
+	return result.ListTasksOutput, nil
 }
 
 // DescribeTasks to describe specified cluster and tasks
