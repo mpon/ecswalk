@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
+	"golang.org/x/sync/errgroup"
 )
 
 // DescribeECSClusters to describe clusters
@@ -33,97 +33,48 @@ func (client Client) DescribeECSClusters() (*ecs.DescribeClustersOutput, error) 
 	return res.DescribeClustersOutput, nil
 }
 
-// ListServices to list ECS Service recursively
-func (client Client) ListServices(cluster string) []*ecs.ListServicesOutput {
-
-	outputs, err := client.listServices(cluster, nil, nil)
-
+// DescribeAllECSServices to describe all ECS services specified cluster
+func (client Client) DescribeAllECSServices(cluster string) ([]*ecs.DescribeServicesOutput, error) {
+	outputs, err := client.listECSServicesRecursively(cluster)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case ecs.ErrCodeServerException:
-				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeException:
-				fmt.Println(ecs.ErrCodeException, aerr.Error())
-			case ecs.ErrCodeInvalidParameterException:
-				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
-			case ecs.ErrCodeClusterNotFoundException:
-				fmt.Println(ecs.ErrCodeClusterNotFoundException, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
-		os.Exit(1)
+		return nil, err
 	}
-
-	return outputs
-}
-
-// DescribeServices to describe ECS services specified cluster and services
-func (client Client) DescribeServices(cluster string, services []string) *ecs.DescribeServicesOutput {
-	input := &ecs.DescribeServicesInput{
-		Cluster:  aws.String(cluster),
-		Services: services,
-	}
-
-	req := client.ECSClient.DescribeServicesRequest(input)
-	result, err := req.Send(context.Background())
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case ecs.ErrCodeServerException:
-				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeException:
-				fmt.Println(ecs.ErrCodeException, aerr.Error())
-			case ecs.ErrCodeInvalidParameterException:
-				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
-			case ecs.ErrCodeClusterNotFoundException:
-				fmt.Println(ecs.ErrCodeClusterNotFoundException, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
-		os.Exit(1)
-	}
-	return result.DescribeServicesOutput
-}
-
-// DescribeAllServices to describe all ECS services specified cluster
-func (client Client) DescribeAllServices(cluster string) []*ecs.DescribeServicesOutput {
-	listServiceOutputs := client.ListServices(cluster)
 	serviceArns := []string{}
-	for _, listServiceOutput := range listServiceOutputs {
-		for _, serviceArn := range listServiceOutput.ServiceArns {
-			serviceArns = append(serviceArns, serviceArn)
+	for _, o := range outputs {
+		for _, arn := range o.ServiceArns {
+			serviceArns = append(serviceArns, arn)
 		}
 	}
 
 	const maxAPILimitChunkSize = 10
 	describeServicesOutputs := []*ecs.DescribeServicesOutput{}
 
-	wg := &sync.WaitGroup{}
-	for _, chunkedServices := range sliceutil.ChunkedSlice(serviceArns, maxAPILimitChunkSize) {
-		wg.Add(1)
-		go func(c []string) {
-			defer wg.Done()
-			describeServicesOutput := client.DescribeServices(cluster, c)
-			describeServicesOutputs = append(describeServicesOutputs, describeServicesOutput)
-		}(chunkedServices)
+	eg, ctx := errgroup.WithContext(context.Background())
+	for _, s := range sliceutil.ChunkedSlice(serviceArns, maxAPILimitChunkSize) {
+		s := s
+		eg.Go(func() error {
+			describeServicesOutput, err := client.describeECSServices(cluster, s)
+
+			select {
+			case <-ctx.Done():
+				return nil
+			default:
+				if err != nil {
+					return err
+				}
+				describeServicesOutputs = append(describeServicesOutputs, describeServicesOutput)
+				return nil
+			}
+		})
 	}
-	wg.Wait()
-	return describeServicesOutputs
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+	return describeServicesOutputs, nil
 }
 
 // DescribeTaskDefinition to describe specified task definition
-func (client Client) DescribeTaskDefinition(taskDefinitionArn string) *ecs.DescribeTaskDefinitionOutput {
+func (client Client) DescribeTaskDefinition(taskDefinitionArn string) (*ecs.DescribeTaskDefinitionOutput, error) {
 	input := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(taskDefinitionArn),
 	}
@@ -131,56 +82,64 @@ func (client Client) DescribeTaskDefinition(taskDefinitionArn string) *ecs.Descr
 	req := client.ECSClient.DescribeTaskDefinitionRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case ecs.ErrCodeServerException:
-				fmt.Println(ecs.ErrCodeServerException, aerr.Error())
-			case ecs.ErrCodeException:
-				fmt.Println(ecs.ErrCodeException, aerr.Error())
-			case ecs.ErrCodeInvalidParameterException:
-				fmt.Println(ecs.ErrCodeInvalidParameterException, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
-		os.Exit(1)
+		return nil, err
 	}
-	return result.DescribeTaskDefinitionOutput
+	return result.DescribeTaskDefinitionOutput, nil
 }
 
 // DescribeTaskDefinitions describe with task definition about all services
-func (client Client) DescribeTaskDefinitions(cluster string, services []string) []*ecs.DescribeTaskDefinitionOutput {
+func (client Client) DescribeTaskDefinitions(cluster string, services []string) ([]*ecs.DescribeTaskDefinitionOutput, error) {
 	const maxAPILimitChunkSize = 10
 	taskDefinitions := []string{}
 	outputs := []*ecs.DescribeTaskDefinitionOutput{}
 
-	wg := &sync.WaitGroup{}
-	for _, chunkedServices := range sliceutil.ChunkedSlice(services, maxAPILimitChunkSize) {
-		wg.Add(1)
-		go func(c []string) {
-			defer wg.Done()
-			describeServicesOutput := client.DescribeServices(cluster, c)
-			for _, service := range describeServicesOutput.Services {
-				taskDefinitions = append(taskDefinitions, *service.TaskDefinition)
+	eg, ctx := errgroup.WithContext(context.Background())
+	for _, s := range sliceutil.ChunkedSlice(services, maxAPILimitChunkSize) {
+		s := s
+		eg.Go(func() error {
+			describeServicesOutput, err := client.describeECSServices(cluster, s)
+
+			select {
+			case <-ctx.Done():
+				return nil
+			default:
+				if err != nil {
+					return err
+				}
+				for _, service := range describeServicesOutput.Services {
+					taskDefinitions = append(taskDefinitions, *service.TaskDefinition)
+				}
+				return nil
 			}
-		}(chunkedServices)
+		})
 	}
-	wg.Wait()
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
 
 	for _, t := range taskDefinitions {
-		wg.Add(1)
-		go func(t string) {
-			defer wg.Done()
-			outputs = append(outputs, client.DescribeTaskDefinition(t))
-		}(t)
-	}
-	wg.Wait()
+		t := t
+		eg.Go(func() error {
+			output, err := client.DescribeTaskDefinition(t)
 
-	return outputs
+			select {
+			case <-ctx.Done():
+				return nil
+			default:
+				if err != nil {
+					return err
+				}
+				outputs = append(outputs, output)
+				return nil
+			}
+		})
+	}
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	return outputs, nil
 }
 
 // ListTasks to list specified cluster
@@ -284,7 +243,17 @@ func (client Client) DescribeContainerInstances(cluster string, containerInstanc
 	return result.DescribeContainerInstancesOutput
 }
 
-func (client Client) listServices(cluster string, nextToken *string, outputs []*ecs.ListServicesOutput) ([]*ecs.ListServicesOutput, error) {
+func (client Client) listECSServicesRecursively(cluster string) ([]*ecs.ListServicesOutput, error) {
+	outputs, err := client.listECSServices(cluster, nil, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return outputs, nil
+}
+
+func (client Client) listECSServices(cluster string, nextToken *string, outputs []*ecs.ListServicesOutput) ([]*ecs.ListServicesOutput, error) {
 	input := &ecs.ListServicesInput{
 		Cluster: aws.String(cluster),
 	}
@@ -306,7 +275,21 @@ func (client Client) listServices(cluster string, nextToken *string, outputs []*
 	outputs = append(outputs, result.ListServicesOutput)
 
 	if result.NextToken != nil {
-		return client.listServices(cluster, result.NextToken, outputs)
+		return client.listECSServices(cluster, result.NextToken, outputs)
 	}
 	return outputs, nil
+}
+
+func (client Client) describeECSServices(cluster string, services []string) (*ecs.DescribeServicesOutput, error) {
+	input := &ecs.DescribeServicesInput{
+		Cluster:  aws.String(cluster),
+		Services: services,
+	}
+
+	req := client.ECSClient.DescribeServicesRequest(input)
+	result, err := req.Send(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return result.DescribeServicesOutput, nil
 }

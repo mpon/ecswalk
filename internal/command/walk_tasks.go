@@ -28,7 +28,10 @@ var walkTasksCmd = &cobra.Command{
 			return err
 		}
 
-		describeServicesOutputs := client.DescribeAllServices(cluster)
+		describeServicesOutputs, err := client.DescribeAllECSServices(cluster)
+		if err != nil {
+			return err
+		}
 		serviceNames := []string{}
 		for _, describeServiceOutput := range describeServicesOutputs {
 			for _, service := range describeServiceOutput.Services {

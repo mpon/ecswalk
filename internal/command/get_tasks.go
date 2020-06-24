@@ -24,7 +24,10 @@ var getTasksCmd = &cobra.Command{
 }
 
 func getTasksCmdRun(cluster string, service string) error {
-	containerInstanceArns, rows := describeTasks(cluster, service)
+	containerInstanceArns, rows, err := describeTasks(cluster, service)
+	if err != nil {
+		return err
+	}
 	instanceDatas := NewInstanceDatas(containerInstanceArns)
 
 	client, err := awsapi.NewClient()
@@ -77,12 +80,11 @@ func getTasksCmdRun(cluster string, service string) error {
 	return nil
 }
 
-func describeTasks(cluster string, service string) ([]string, GetTaskRows) {
-	// TODO: err handling
-	client, _ := awsapi.NewClient()
-	// if err != nil {
-	// 	return err
-	// }
+func describeTasks(cluster string, service string) ([]string, GetTaskRows, error) {
+	client, err := awsapi.NewClient()
+	if err != nil {
+		return []string{}, GetTaskRows{}, err
+	}
 	containerInstanceArns := []string{}
 	rows := GetTaskRows{}
 
@@ -100,7 +102,7 @@ func describeTasks(cluster string, service string) ([]string, GetTaskRows) {
 	}
 	containerInstanceArns = sliceutil.DistinctSlice(containerInstanceArns)
 
-	return containerInstanceArns, rows
+	return containerInstanceArns, rows, nil
 }
 
 func init() {
