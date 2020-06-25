@@ -6,21 +6,30 @@ import (
 	"sort"
 	"text/tabwriter"
 
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"github.com/spf13/cobra"
+	"golang.org/x/xerrors"
 )
 
-var getTasksCmdFlagCluster string
-var getTasksCmdFlagService string
+// NewCmdGetTasks represents the get tasks command
+func NewCmdGetTasks() *cobra.Command {
+	var getTasksCmdFlagCluster string
+	var getTasksCmdFlagService string
+	cmd := &cobra.Command{
+		Use:   "tasks",
+		Short: "get Tasks specified service",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return getTasksCmdRun(getTasksCmdFlagCluster, getTasksCmdFlagService)
+		},
+	}
+	cmd.Flags().StringVarP(&getTasksCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
+	cmd.MarkFlagRequired("cluster")
+	cmd.Flags().StringVarP(&getTasksCmdFlagService, "service", "s", "", "AWS ECS service")
+	cmd.MarkFlagRequired("service")
 
-// tasksCmd represents the tasks command
-var getTasksCmd = &cobra.Command{
-	Use:   "tasks",
-	Short: "get Tasks specified service",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return getTasksCmdRun(getTasksCmdFlagCluster, getTasksCmdFlagService)
-	},
+	return cmd
 }
 
 func getTasksCmdRun(cluster string, service string) error {
@@ -35,24 +44,27 @@ func getTasksCmdRun(cluster string, service string) error {
 		return err
 	}
 	ec2InstanceIds := []string{}
-	describeContainerInstancesOutput, err := client.DescribeContainerInstances(cluster, containerInstanceArns)
-	if err != nil {
-		return err
-	}
-	for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
-		instanceDatas.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
-		ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
-	}
-	ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
 
-	describeInstancesOutput, err := client.DescribeEC2Instances(ec2InstanceIds)
-	if err != nil {
-		return err
-	}
+	if len(containerInstanceArns) > 0 {
+		describeContainerInstancesOutput, err := client.DescribeContainerInstances(cluster, containerInstanceArns)
+		if err != nil {
+			return xerrors.Errorf("message: %w", err)
+		}
+		for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
+			instanceDatas.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
+			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
+		}
+		ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
 
-	for _, reservation := range describeInstancesOutput.Reservations {
-		for _, instance := range reservation.Instances {
-			instanceDatas.UpdatePrivateIPByInstanceID(*instance.PrivateIpAddress, *instance.InstanceId)
+		describeInstancesOutput, err := client.DescribeEC2Instances(ec2InstanceIds)
+		if err != nil {
+			return err
+		}
+
+		for _, reservation := range describeInstancesOutput.Reservations {
+			for _, instance := range reservation.Instances {
+				instanceDatas.UpdatePrivateIPByInstanceID(*instance.PrivateIpAddress, *instance.InstanceId)
+			}
 		}
 	}
 
@@ -95,12 +107,17 @@ func describeTasks(cluster string, service string) ([]string, GetTaskRows, error
 	if err != nil {
 		return []string{}, GetTaskRows{}, err
 	}
-	describeTasksOutput, err := client.DescribeTasks(cluster, listTasksOutput.TaskArns)
-	if err != nil {
-		return []string{}, GetTaskRows{}, err
+	var ecsTasks []ecs.Task = []ecs.Task{}
+
+	if len(listTasksOutput.TaskArns) > 0 {
+		describeTasksOutput, err := client.DescribeTasks(cluster, listTasksOutput.TaskArns)
+		if err != nil {
+			return []string{}, GetTaskRows{}, err
+		}
+		ecsTasks = describeTasksOutput.Tasks
 	}
 
-	for _, task := range describeTasksOutput.Tasks {
+	for _, task := range ecsTasks {
 		rows = append(rows, &GetTaskRow{
 			TaskID:               awsapi.ShortArn(*task.TaskArn),
 			TaskDefinition:       awsapi.ShortArn(*task.TaskDefinitionArn),
@@ -112,22 +129,4 @@ func describeTasks(cluster string, service string) ([]string, GetTaskRows, error
 	containerInstanceArns = sliceutil.DistinctSlice(containerInstanceArns)
 
 	return containerInstanceArns, rows, nil
-}
-
-func init() {
-	getCmd.AddCommand(getTasksCmd)
-	getTasksCmd.Flags().StringVarP(&getTasksCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
-	getTasksCmd.MarkFlagRequired("cluster")
-	getTasksCmd.Flags().StringVarP(&getTasksCmdFlagService, "service", "s", "", "AWS ECS service")
-	getTasksCmd.MarkFlagRequired("service")
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// tasksCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// tasksCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

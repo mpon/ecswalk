@@ -11,15 +11,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var getServicesCmdFlagCluster string
+// NewCmdGetServices represents the get services command
+func NewCmdGetServices() *cobra.Command {
+	var getServicesCmdFlagCluster string
+	cmd := &cobra.Command{
+		Use:   "services",
+		Short: "get all ECS services specified cluster",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return getServicesCmdRun(getServicesCmdFlagCluster)
+		},
+	}
+	cmd.Flags().StringVarP(&getServicesCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
+	cmd.MarkFlagRequired("cluster")
 
-// servicesCmd represents the services command
-var getServicesCmd = &cobra.Command{
-	Use:   "services",
-	Short: "get all ECS services specified cluster",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return getServicesCmdRun(getServicesCmdFlagCluster)
-	},
+	return cmd
 }
 
 func getServicesCmdRun(cluster string) error {
@@ -80,20 +85,4 @@ func getServicesCmdRun(cluster string) error {
 	}
 	w.Flush()
 	return nil
-}
-
-func init() {
-	getCmd.AddCommand(getServicesCmd)
-	getServicesCmd.Flags().StringVarP(&getServicesCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
-	getServicesCmd.MarkFlagRequired("cluster")
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// servicesCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// servicesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

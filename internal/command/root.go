@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -30,8 +31,7 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalf("%+v", err)
 	}
 }
 
@@ -46,6 +46,12 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	cmdGet := NewCmdGet()
+	cmdGet.AddCommand(NewCmdGetClusters())
+	cmdGet.AddCommand(NewCmdGetServices())
+	cmdGet.AddCommand(NewCmdGetTasks())
+
+	rootCmd.AddCommand(cmdGet)
 }
 
 // initConfig reads in config file and ENV variables if set.

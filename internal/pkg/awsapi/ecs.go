@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/xerrors"
 )
 
 // DescribeECSClusters to describe clusters
@@ -136,7 +137,7 @@ func (client Client) ListECSTasks(cluster string, service string) (*ecs.ListTask
 	req := client.ECSClient.ListTasksRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("ECS ListTasks: %w", err)
 	}
 	return result.ListTasksOutput, nil
 }
@@ -151,7 +152,7 @@ func (client Client) DescribeTasks(cluster string, tasks []string) (*ecs.Describ
 	req := client.ECSClient.DescribeTasksRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("ECS DescribeTasks: %w", err)
 	}
 	return result.DescribeTasksOutput, nil
 }
@@ -166,7 +167,7 @@ func (client Client) DescribeContainerInstances(cluster string, containerInstanc
 	req := client.ECSClient.DescribeContainerInstancesRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("ECS DescribeContainerInstances: %w", err)
 	}
 	return result.DescribeContainerInstancesOutput, nil
 }
