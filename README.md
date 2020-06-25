@@ -2,61 +2,43 @@
 
 Show information for Amazon Elastic Container Service(ECS) like the AWS management console.
 
-## Demo
+## Usage
 
-### Fuzzy finder ECS Services
+### show ECS services by selecting cluster interactively
+
+```bash
+ecswalk services
+```
 
 ![docs/screenshot/services.gif](docs/screenshot/services.gif)
 
-### Fuzzy finder ECS Tasks
+### show ECS tasks by selecting cluster and service interactively
+
+```bash
+ecswalk tasks
+```
 
 ![docs/screenshot/tasks.gif](docs/screenshot/tasks.gif)
-
-## Usage
-
-### Get Information from ECS Interactively
-
-* get ECS services by selecting cluster interactively
-
-```console
-$ ecswalk walk services
-```
-
-* get ECS tasks by selecting cluster and service interactively
-
-```console
-$ ecswalk walk tasks
-```
 
 ### Get Information from ECS
 
 * get ECS clusters
 
-```console
-$ ecswalk get clusters
+```bash
+ecswalk get clusters
 ```
 
 * get ECS services for specified ECS cluster
 
-```console
-$ ecswalk get service -c default
+```bash
+ecswalk get service -c default
 ```
 
 * get ECS tasks for specified ECS cluster and service
 
-```console
-$ ecswalk get tasks -c default -s web-service
+```bash
+ecswalk get tasks -c default -s web-service
 ```
-
-### TODO: Run ECS task
-
-* [ ] run a task with running serivce task definition
-* [ ] polling cloudwatch logs and task status
-
-```console
-$ ecswalk run --c default --s web-service echo hello
-```
-
 
 ## Options
 
