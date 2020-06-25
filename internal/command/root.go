@@ -53,8 +53,14 @@ func init() {
 	cmdGet.AddCommand(NewCmdGetServices())
 	cmdGet.AddCommand(NewCmdGetTasks())
 
+	cmdServices := NewCmdServices()
+
+	cmdTasks := NewCmdTasks()
+
 	rootCmd.AddCommand(cmdVersion)
 	rootCmd.AddCommand(cmdGet)
+	rootCmd.AddCommand(cmdServices)
+	rootCmd.AddCommand(cmdTasks)
 }
 
 // initConfig reads in config file and ENV variables if set.
