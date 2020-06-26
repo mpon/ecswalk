@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
-	"github.com/manifoldco/promptui"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -77,18 +75,4 @@ func initConfig() {
 
 	// viper.AutomaticEnv() // read in environment variables that match
 	viper.ReadInConfig() // If a config file is found, read it in.
-}
-
-func newPrompt(elements []string, label string) promptui.Select {
-	searcher := func(input string, index int) bool {
-		cluster := strings.ToLower(elements[index])
-		return strings.Contains(cluster, input)
-	}
-
-	return promptui.Select{
-		Label:    label,
-		Items:    elements,
-		Size:     20,
-		Searcher: searcher,
-	}
 }

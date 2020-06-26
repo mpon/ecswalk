@@ -44,6 +44,12 @@ func getServicesCmdRun(cluster string) error {
 			serviceArns = append(serviceArns, *service.ServiceArn)
 		}
 	}
+
+	if len(services) == 0 {
+		fmt.Printf("%s has no services\n", cluster)
+		return nil
+	}
+
 	describeTaskDefinitionOutputs, err := client.DescribeTaskDefinitions(cluster, serviceArns)
 	if err != nil {
 		return err

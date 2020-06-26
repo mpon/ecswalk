@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 
+	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/spf13/cobra"
 )
@@ -21,18 +22,32 @@ func NewCmdServices() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			clusterNames := []string{}
-			for _, cluster := range output.Clusters {
-				clusterNames = append(clusterNames, *cluster.ClusterName)
+
+			if len(output.Clusters) == 0 {
+				fmt.Println("cluster not found")
+				return nil
 			}
 
-			prompt := newPrompt(clusterNames, "Select Cluster")
-			_, cluster, err := prompt.Run()
+			idx, err := fuzzyfinder.Find(output.Clusters,
+				func(i int) string {
+					return fmt.Sprintf("%s", *output.Clusters[i].ClusterName)
+				},
+				fuzzyfinder.WithPromptString("Select Cluster:"),
+				fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+					cluster := output.Clusters[i]
+					return fmt.Sprintf("%s\n\nServices: %d\nRunning Tasks: %d\nPending Tasks: %d",
+						*cluster.ClusterName,
+						*cluster.ActiveServicesCount,
+						*cluster.RunningTasksCount,
+						*cluster.PendingTasksCount)
+				}),
+			)
+
 			if err != nil {
-				fmt.Printf("Prompt failed %v\n", err)
-				return err
+				return nil
 			}
-			getServicesCmdRun(cluster)
+
+			getServicesCmdRun(*output.Clusters[idx].ClusterName)
 			return nil
 		},
 	}
