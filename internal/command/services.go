@@ -3,8 +3,8 @@ package command
 import (
 	"fmt"
 
-	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
+	"github.com/mpon/ecswalk/internal/pkg/fuzzyfinder"
 	"github.com/spf13/cobra"
 )
 
@@ -28,26 +28,13 @@ func NewCmdServices() *cobra.Command {
 				return nil
 			}
 
-			idx, err := fuzzyfinder.Find(output.Clusters,
-				func(i int) string {
-					return fmt.Sprintf("%s", *output.Clusters[i].ClusterName)
-				},
-				fuzzyfinder.WithPromptString("Select Cluster:"),
-				fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
-					cluster := output.Clusters[i]
-					return fmt.Sprintf("%s\n\nServices: %d\nRunning Tasks: %d\nPending Tasks: %d",
-						*cluster.ClusterName,
-						*cluster.ActiveServicesCount,
-						*cluster.RunningTasksCount,
-						*cluster.PendingTasksCount)
-				}),
-			)
-
+			cluster, err := fuzzyfinder.FindCluster(output.Clusters)
 			if err != nil {
+				// Abort fuzzyfinder
 				return nil
 			}
 
-			getServicesCmdRun(*output.Clusters[idx].ClusterName)
+			getServicesCmdRun(*cluster.ClusterName)
 			return nil
 		},
 	}

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
+	"github.com/mpon/ecswalk/internal/pkg/fuzzyfinder"
 	"github.com/spf13/cobra"
 )
 
@@ -29,22 +29,12 @@ func NewCmdTasks() *cobra.Command {
 				return nil
 			}
 
-			idx, _ := fuzzyfinder.Find(output.Clusters,
-				func(i int) string {
-					return fmt.Sprintf("%s", *output.Clusters[i].ClusterName)
-				},
-				fuzzyfinder.WithPromptString("Select Cluster:"),
-				fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
-					cluster := output.Clusters[i]
-					return fmt.Sprintf("%s\n\nServices: %d\nRunning Tasks: %d\nPending Tasks: %d",
-						*cluster.ClusterName,
-						*cluster.ActiveServicesCount,
-						*cluster.RunningTasksCount,
-						*cluster.PendingTasksCount)
-				}),
-			)
+			cluster, err := fuzzyfinder.FindCluster(output.Clusters)
+			if err != nil {
+				// Abort fuzzyfinder
+				return nil
+			}
 
-			cluster := output.Clusters[idx]
 			describeServicesOutputs, err := client.DescribeAllECSServices(*cluster.ClusterName)
 			if err != nil {
 				return err
@@ -62,24 +52,13 @@ func NewCmdTasks() *cobra.Command {
 				return nil
 			}
 
-			idx2, _ := fuzzyfinder.Find(services,
-				func(i int) string {
-					s := services[i]
-					return fmt.Sprintf("%s", *s.ServiceName)
-				},
-				fuzzyfinder.WithPromptString("Select Service:"),
-				fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
-					s := services[i]
-					return fmt.Sprintf("%s\n\nTask Definition: %s\nDesired tasks: %d\nRunning tasks: %d",
-						*s.ServiceName,
-						awsapi.ShortArn(*s.TaskDefinition),
-						*s.DesiredCount,
-						*s.RunningCount,
-					)
-				}),
-			)
+			service, err := fuzzyfinder.FindService(services)
+			if err != nil {
+				// Abort fuzzyfinder
+				return nil
+			}
 
-			getTasksCmdRun(*cluster.ClusterName, *services[idx2].ServiceName)
+			getTasksCmdRun(*cluster.ClusterName, *service.ServiceName)
 			return nil
 		},
 	}
