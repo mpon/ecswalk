@@ -14,39 +14,29 @@ import (
 
 var cfgFile string
 
-// Version is dynamically set by the toolchain or overridden by the Makefile.
-var Version = "DEV"
-
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:          "ecswalk",
-	Short:        fmt.Sprintf("ecswalk version %s", Version),
-	SilenceUsage: true,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+// NewCmdRoot represents the base command when called without any subcommands
+func NewCmdRoot(version string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:          "ecswalk",
+		Short:        fmt.Sprintf("ecswalk version %s", version),
+		SilenceUsage: true,
+		Version:      version,
+		// Uncomment the following line if your bare application
+		// has an action associated with it:
+		//	Run: func(cmd *cobra.Command, args []string) { },
+	}
+	return cmd
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatalf("%+v", err)
-	}
-}
-
-func init() {
+func Execute(version string) {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is .ecswalk.yaml, next $HOME/.ecswalk.yaml)")
+	rootCmd := NewCmdRoot(version)
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	cmdVersion := NewCmdVersion()
+	usage := "config file (default is .ecswalk.yaml, next $HOME/.ecswalk.yaml)"
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", usage)
 
 	cmdGet := NewCmdGet()
 	cmdGet.AddCommand(NewCmdGetClusters())
@@ -57,10 +47,13 @@ func init() {
 
 	cmdTasks := NewCmdTasks()
 
-	rootCmd.AddCommand(cmdVersion)
 	rootCmd.AddCommand(cmdGet)
 	rootCmd.AddCommand(cmdServices)
 	rootCmd.AddCommand(cmdTasks)
+
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatalf("%+v", err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.

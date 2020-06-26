@@ -9,7 +9,7 @@ builds:
     binary: ecswalk
     ldflags:
       - -s -w
-      - -X github.com/mpon/ecswalk/internal/command.Version={{ .Version }}
+      - -X main.Version={{ .Version }}
     env:
       - CGO_ENABLED=0
 archives:
