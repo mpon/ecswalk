@@ -4,21 +4,19 @@ Show information for Amazon Elastic Container Service(ECS) like the AWS manageme
 
 ## Usage
 
+![docs/screenshot/demo.gif](docs/screenshot/demo.gif)
+
 ### show ECS services by selecting cluster interactively
 
 ```bash
 ecswalk services
 ```
 
-![docs/screenshot/services.gif](docs/screenshot/services.gif)
-
 ### show ECS tasks by selecting cluster and service interactively
 
 ```bash
 ecswalk tasks
 ```
-
-![docs/screenshot/tasks.gif](docs/screenshot/tasks.gif)
 
 ### Get Information from ECS
 
