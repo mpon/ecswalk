@@ -37,7 +37,7 @@ func getTasksCmdRun(cluster string, service string) error {
 	if err != nil {
 		return err
 	}
-	instanceDatas := NewInstanceDatas(containerInstanceArns)
+	instances := NewInstances(containerInstanceArns)
 
 	client, err := awsapi.NewClient()
 	if err != nil {
@@ -51,7 +51,7 @@ func getTasksCmdRun(cluster string, service string) error {
 			return xerrors.Errorf("message: %w", err)
 		}
 		for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
-			instanceDatas.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
+			instances.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
 			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
 		}
 		ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
@@ -63,13 +63,13 @@ func getTasksCmdRun(cluster string, service string) error {
 
 		for _, reservation := range describeInstancesOutput.Reservations {
 			for _, instance := range reservation.Instances {
-				instanceDatas.UpdatePrivateIPByInstanceID(*instance.PrivateIpAddress, *instance.InstanceId)
+				instances.UpdatePrivateIPByInstanceID(*instance.PrivateIpAddress, *instance.InstanceId)
 			}
 		}
 	}
 
 	for _, row := range rows {
-		for _, data := range instanceDatas {
+		for _, data := range instances {
 			if row.ContainerInstanceArn == data.ContainerInstanceArn {
 				row.EC2InstanceID = data.EC2InstanceID
 				row.PrivateIP = data.PrivateIP

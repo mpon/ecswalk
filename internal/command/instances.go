@@ -9,6 +9,7 @@ import (
 
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/mpon/ecswalk/internal/pkg/fuzzyfinder"
+	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"github.com/spf13/cobra"
 )
 
@@ -43,6 +44,19 @@ func NewCmdInstances() *cobra.Command {
 				return err
 			}
 
+			instances := CreateInstances(res.ContainerInstances)
+			ec2List := sliceutil.DistinctSlice(EC2InstanceIDs(instances))
+			output2, err := client.DescribeEC2Instances(ec2List)
+			if err != nil {
+				return err
+			}
+
+			for _, reserv := range output2.Reservations {
+				for _, i := range reserv.Instances {
+					instances.UpdatePrivateIPByInstanceID(*i.PrivateIpAddress, *i.InstanceId)
+				}
+			}
+
 			rows := GetInstanceRows{}
 			for _, c := range res.ContainerInstances {
 				var cpuAvailable int64
@@ -55,6 +69,7 @@ func NewCmdInstances() *cobra.Command {
 						memoryAvailable = *r.IntegerValue
 					}
 				}
+
 				rows = append(rows, &GetInstanceRow{
 					ContainerInstanceArn: awsapi.ShortArn(*c.ContainerInstanceArn),
 					EC2InstanceID:        *c.Ec2InstanceId,
@@ -65,6 +80,7 @@ func NewCmdInstances() *cobra.Command {
 					MemoryAvailable:      memoryAvailable,
 					AgentVersion:         *c.VersionInfo.AgentVersion,
 					DockerVersion:        strings.Replace(*c.VersionInfo.DockerVersion, "DockerVersion: ", "", -1),
+					PrivateIP:            FindPrivateIP(instances, *c.Ec2InstanceId),
 				})
 			}
 			sort.Sort(rows)
