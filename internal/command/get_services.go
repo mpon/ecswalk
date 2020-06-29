@@ -18,7 +18,11 @@ func NewCmdGetServices() *cobra.Command {
 		Use:   "services",
 		Short: "get all ECS services specified cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return getServicesCmdRun(getServicesCmdFlagCluster)
+			client, err := awsapi.NewClient()
+			if err != nil {
+				return err
+			}
+			return runGetServicesCmd(client, getServicesCmdFlagCluster)
 		},
 	}
 	cmd.Flags().StringVarP(&getServicesCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
@@ -27,14 +31,14 @@ func NewCmdGetServices() *cobra.Command {
 	return cmd
 }
 
-func getServicesCmdRun(clusterName string) error {
+func runGetServicesCmd(client *awsapi.Client, clusterName string) error {
 	var cluster *ecs.Cluster
-	client, err := awsapi.NewClient()
+
+	output, err := client.DescribeECSClusters()
 	if err != nil {
 		return err
 	}
 
-	output, err := client.DescribeECSClusters()
 	for _, c := range output.Clusters {
 		c := c
 		if *c.ClusterName == clusterName {
@@ -42,6 +46,10 @@ func getServicesCmdRun(clusterName string) error {
 		}
 	}
 
+	return runGetServices(client, cluster)
+}
+
+func runGetServices(client *awsapi.Client, cluster *ecs.Cluster) error {
 	describeServicesOutputs, err := client.DescribeAllECSServices(cluster)
 	if err != nil {
 		return err

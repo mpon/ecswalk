@@ -34,7 +34,10 @@ func NewCmdServices() *cobra.Command {
 				return nil
 			}
 
-			getServicesCmdRun(*cluster.ClusterName)
+			if err := runGetServices(client, cluster); err != nil {
+				return nil
+			}
+
 			return nil
 		},
 	}
