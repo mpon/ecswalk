@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/mpon/ecswalk/internal/pkg/fuzzyfinder"
 	"github.com/spf13/cobra"
@@ -35,16 +34,9 @@ func NewCmdTasks() *cobra.Command {
 				return nil
 			}
 
-			describeServicesOutputs, err := client.DescribeAllECSServices(cluster)
+			services, err := client.GetAllECSServices(cluster)
 			if err != nil {
 				return err
-			}
-
-			services := []ecs.Service{}
-			for _, describeServiceOutput := range describeServicesOutputs {
-				for _, service := range describeServiceOutput.Services {
-					services = append(services, service)
-				}
 			}
 
 			if len(services) == 0 {

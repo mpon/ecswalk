@@ -41,6 +41,24 @@ func (client Client) GetECSService(cluster *ecs.Cluster, serviceName string) (*e
 	return &result.DescribeServicesOutput.Services[0], nil
 }
 
+// GetAllECSServices to get all ECS Services
+func (client Client) GetAllECSServices(cluster *ecs.Cluster) ([]*ecs.Service, error) {
+	outputs, err := client.describeAllECSServices(cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	// flatten list
+	var services []*ecs.Service
+	for _, o := range outputs {
+		for _, s := range o.Services {
+			s := s
+			services = append(services, &s)
+		}
+	}
+	return services, nil
+}
+
 // DescribeECSClusters to describe clusters
 func (client Client) DescribeECSClusters() (*ecs.DescribeClustersOutput, error) {
 	listInput := &ecs.ListClustersInput{}
@@ -62,8 +80,7 @@ func (client Client) DescribeECSClusters() (*ecs.DescribeClustersOutput, error) 
 	return res.DescribeClustersOutput, nil
 }
 
-// DescribeAllECSServices to describe all ECS services specified cluster
-func (client Client) DescribeAllECSServices(cluster *ecs.Cluster) ([]*ecs.DescribeServicesOutput, error) {
+func (client Client) describeAllECSServices(cluster *ecs.Cluster) ([]*ecs.DescribeServicesOutput, error) {
 	outputs, err := client.listECSServicesRecursively(cluster)
 	if err != nil {
 		return nil, err

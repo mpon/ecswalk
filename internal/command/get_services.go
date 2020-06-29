@@ -42,18 +42,9 @@ func runGetServicesCmd(clusterName string) error {
 }
 
 func runGetServices(client *awsapi.Client, cluster *ecs.Cluster) error {
-	describeServicesOutputs, err := client.DescribeAllECSServices(cluster)
+	services, err := client.GetAllECSServices(cluster)
 	if err != nil {
-		return err
-	}
-	services := []*ecs.Service{}
-	serviceArns := []string{}
-	for _, describeServiceOutput := range describeServicesOutputs {
-		for _, service := range describeServiceOutput.Services {
-			service := service
-			services = append(services, &service)
-			serviceArns = append(serviceArns, *service.ServiceArn)
-		}
+		return nil
 	}
 
 	if len(services) == 0 {
