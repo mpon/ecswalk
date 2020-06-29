@@ -157,8 +157,7 @@ func (client Client) DescribeTasks(cluster string, tasks []string) (*ecs.Describ
 	return result.DescribeTasksOutput, nil
 }
 
-// ListContainerInstances to list container instances
-func (client Client) ListContainerInstances(cluster string) (*ecs.ListContainerInstancesOutput, error) {
+func (client Client) listAllContainerInstances(cluster string) (*ecs.ListContainerInstancesOutput, error) {
 	input := &ecs.ListContainerInstancesInput{
 		Cluster: aws.String(cluster),
 	}
@@ -169,6 +168,16 @@ func (client Client) ListContainerInstances(cluster string) (*ecs.ListContainerI
 		return nil, err
 	}
 	return result.ListContainerInstancesOutput, nil
+}
+
+// DescribeAllContainerInstances to describe all container instances
+func (client Client) DescribeAllContainerInstances(cluster string) (*ecs.DescribeContainerInstancesOutput, error) {
+	output, err := client.listAllContainerInstances(cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.DescribeContainerInstances(cluster, output.ContainerInstanceArns)
 }
 
 // DescribeContainerInstances to describe container instances

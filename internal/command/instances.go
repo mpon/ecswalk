@@ -2,7 +2,10 @@ package command
 
 import (
 	"fmt"
+	"os"
+	"sort"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/mpon/ecswalk/internal/pkg/fuzzyfinder"
@@ -35,17 +38,13 @@ func NewCmdInstances() *cobra.Command {
 				return nil
 			}
 
-			output2, err := client.ListContainerInstances(*cluster.ClusterName)
+			res, err := client.DescribeAllContainerInstances(*cluster.ClusterName)
 			if err != nil {
 				return err
 			}
 
-			output3, err := client.DescribeContainerInstances(*cluster.ClusterName, output2.ContainerInstanceArns)
-			if err != nil {
-				return err
-			}
-
-			for _, c := range output3.ContainerInstances {
+			rows := GetInstanceRows{}
+			for _, c := range res.ContainerInstances {
 				var cpuAvailable int64
 				var memoryAvailable int64
 				for _, r := range c.RemainingResources {
@@ -56,18 +55,38 @@ func NewCmdInstances() *cobra.Command {
 						memoryAvailable = *r.IntegerValue
 					}
 				}
-				fmt.Println(
-					awsapi.ShortArn(*c.ContainerInstanceArn),
-					*c.Ec2InstanceId,
-					*c.AgentConnected,
-					*c.Status,
-					*c.RunningTasksCount,
-					cpuAvailable,
-					memoryAvailable,
-					*c.VersionInfo.AgentVersion,
-					strings.Replace(*c.VersionInfo.DockerVersion, "DockerVersion: ", "", 1),
+				rows = append(rows, &GetInstanceRow{
+					ContainerInstanceArn: awsapi.ShortArn(*c.ContainerInstanceArn),
+					EC2InstanceID:        *c.Ec2InstanceId,
+					AgentConnected:       *c.AgentConnected,
+					Status:               *c.Status,
+					RunningTasksCount:    *c.RunningTasksCount,
+					CPUAvailable:         cpuAvailable,
+					MemoryAvailable:      memoryAvailable,
+					AgentVersion:         *c.VersionInfo.AgentVersion,
+					DockerVersion:        strings.Replace(*c.VersionInfo.DockerVersion, "DockerVersion: ", "", -1),
+				})
+			}
+			sort.Sort(rows)
+
+			w := new(tabwriter.Writer)
+			w.Init(os.Stdout, 0, 8, 1, '\t', 0)
+			fmt.Fprintln(w, "ContainerInstance\tEC2Instance\tPrivateIP\tConnected\tStatus\tRunning\tCPU\tMemory\tAgent\tDocker")
+			for _, row := range rows {
+				fmt.Fprintf(w, "%s\t%s\t%s\t%v\t%s\t%d\t%d\t%d\t%s\t%s\n",
+					row.ContainerInstanceArn,
+					row.EC2InstanceID,
+					row.PrivateIP,
+					row.AgentConnected,
+					row.Status,
+					row.RunningTasksCount,
+					row.CPUAvailable,
+					row.MemoryAvailable,
+					row.AgentVersion,
+					row.DockerVersion,
 				)
 			}
+			w.Flush()
 
 			return nil
 		},
