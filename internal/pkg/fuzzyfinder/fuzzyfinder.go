@@ -17,11 +17,13 @@ func FindCluster(clusters []ecs.Cluster) (*ecs.Cluster, error) {
 		fuzzyfinder.WithPromptString("Select Cluster:"),
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
 			cluster := clusters[i]
-			return fmt.Sprintf("%s\n\nServices: %d\nRunning Tasks: %d\nPending Tasks: %d",
+			return fmt.Sprintf("%s\n\nServices: %d\nRunning Tasks: %d\nPending Tasks: %d\nContainer instances: %d",
 				*cluster.ClusterName,
 				*cluster.ActiveServicesCount,
 				*cluster.RunningTasksCount,
-				*cluster.PendingTasksCount)
+				*cluster.PendingTasksCount,
+				*cluster.RegisteredContainerInstancesCount,
+			)
 		}),
 	)
 

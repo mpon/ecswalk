@@ -45,9 +45,12 @@ func Execute(version string) {
 
 	cmdTasks := NewCmdTasks()
 
+	cmdInstances := NewCmdInstances()
+
 	rootCmd.AddCommand(cmdGet)
 	rootCmd.AddCommand(cmdServices)
 	rootCmd.AddCommand(cmdTasks)
+	rootCmd.AddCommand(cmdInstances)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalf("%+v", err)
