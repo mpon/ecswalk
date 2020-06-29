@@ -127,8 +127,7 @@ func (client Client) describeAllECSServices(cluster *ecs.Cluster) ([]*ecs.Descri
 	return describeServicesOutputs, nil
 }
 
-// DescribeTaskDefinition to describe specified task definition
-func (client Client) DescribeTaskDefinition(taskDefinitionArn string) (*ecs.DescribeTaskDefinitionOutput, error) {
+func (client Client) describeTaskDefinition(taskDefinitionArn string) (*ecs.DescribeTaskDefinitionOutput, error) {
 	input := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(taskDefinitionArn),
 	}
@@ -155,7 +154,7 @@ func (client Client) DescribeTaskDefinitions(cluster *ecs.Cluster, services []*e
 	for _, t := range taskDefinitions {
 		t := t
 		eg.Go(func() error {
-			output, err := client.DescribeTaskDefinition(t)
+			output, err := client.describeTaskDefinition(t)
 
 			select {
 			case <-ctx.Done():
