@@ -35,7 +35,7 @@ func NewCmdTasks() *cobra.Command {
 				return nil
 			}
 
-			describeServicesOutputs, err := client.DescribeAllECSServices(*cluster.ClusterName)
+			describeServicesOutputs, err := client.DescribeAllECSServices(cluster)
 			if err != nil {
 				return err
 			}

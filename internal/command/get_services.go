@@ -27,11 +27,21 @@ func NewCmdGetServices() *cobra.Command {
 	return cmd
 }
 
-func getServicesCmdRun(cluster string) error {
+func getServicesCmdRun(clusterName string) error {
+	var cluster *ecs.Cluster
 	client, err := awsapi.NewClient()
 	if err != nil {
 		return err
 	}
+
+	output, err := client.DescribeECSClusters()
+	for _, c := range output.Clusters {
+		c := c
+		if *c.ClusterName == clusterName {
+			cluster = &c
+		}
+	}
+
 	describeServicesOutputs, err := client.DescribeAllECSServices(cluster)
 	if err != nil {
 		return err
@@ -46,7 +56,7 @@ func getServicesCmdRun(cluster string) error {
 	}
 
 	if len(services) == 0 {
-		fmt.Printf("%s has no services\n", cluster)
+		fmt.Printf("%s has no services\n", *cluster.ClusterName)
 		return nil
 	}
 

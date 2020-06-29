@@ -32,7 +32,7 @@ func (client Client) DescribeECSClusters() (*ecs.DescribeClustersOutput, error) 
 }
 
 // DescribeAllECSServices to describe all ECS services specified cluster
-func (client Client) DescribeAllECSServices(cluster string) ([]*ecs.DescribeServicesOutput, error) {
+func (client Client) DescribeAllECSServices(cluster *ecs.Cluster) ([]*ecs.DescribeServicesOutput, error) {
 	outputs, err := client.listECSServicesRecursively(cluster)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func (client Client) DescribeTaskDefinition(taskDefinitionArn string) (*ecs.Desc
 }
 
 // DescribeTaskDefinitions describe with task definition about all services
-func (client Client) DescribeTaskDefinitions(cluster string, services []string) ([]*ecs.DescribeTaskDefinitionOutput, error) {
+func (client Client) DescribeTaskDefinitions(cluster *ecs.Cluster, services []string) ([]*ecs.DescribeTaskDefinitionOutput, error) {
 	const maxAPILimitChunkSize = 10
 	taskDefinitions := []string{}
 	outputs := []*ecs.DescribeTaskDefinitionOutput{}
@@ -186,7 +186,7 @@ func (client Client) DescribeContainerInstances(cluster *ecs.Cluster, containerI
 	return result.DescribeContainerInstancesOutput, nil
 }
 
-func (client Client) listECSServicesRecursively(cluster string) ([]*ecs.ListServicesOutput, error) {
+func (client Client) listECSServicesRecursively(cluster *ecs.Cluster) ([]*ecs.ListServicesOutput, error) {
 	outputs, err := client.listECSServices(cluster, nil, nil)
 
 	if err != nil {
@@ -196,14 +196,14 @@ func (client Client) listECSServicesRecursively(cluster string) ([]*ecs.ListServ
 	return outputs, nil
 }
 
-func (client Client) listECSServices(cluster string, nextToken *string, outputs []*ecs.ListServicesOutput) ([]*ecs.ListServicesOutput, error) {
+func (client Client) listECSServices(cluster *ecs.Cluster, nextToken *string, outputs []*ecs.ListServicesOutput) ([]*ecs.ListServicesOutput, error) {
 	input := &ecs.ListServicesInput{
-		Cluster: aws.String(cluster),
+		Cluster: cluster.ClusterName,
 	}
 
 	if nextToken != nil {
 		input = &ecs.ListServicesInput{
-			Cluster:   aws.String(cluster),
+			Cluster:   cluster.ClusterName,
 			NextToken: nextToken,
 		}
 	}
@@ -223,9 +223,9 @@ func (client Client) listECSServices(cluster string, nextToken *string, outputs 
 	return outputs, nil
 }
 
-func (client Client) describeECSServices(cluster string, services []string) (*ecs.DescribeServicesOutput, error) {
+func (client Client) describeECSServices(cluster *ecs.Cluster, services []string) (*ecs.DescribeServicesOutput, error) {
 	input := &ecs.DescribeServicesInput{
-		Cluster:  aws.String(cluster),
+		Cluster:  cluster.ClusterName,
 		Services: services,
 	}
 
