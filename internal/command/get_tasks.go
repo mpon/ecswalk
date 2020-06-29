@@ -32,7 +32,7 @@ func NewCmdGetTasks() *cobra.Command {
 	return cmd
 }
 
-func runGetTasksCmd(clusterName string, service string) error {
+func runGetTasksCmd(clusterName string, serviceName string) error {
 	client, err := awsapi.NewClient()
 	if err != nil {
 		return err
@@ -43,12 +43,12 @@ func runGetTasksCmd(clusterName string, service string) error {
 		return err
 	}
 
-	o, err := client.DescribeECSServices(cluster, []string{service})
+	service, err := client.GetECSService(cluster, serviceName)
 	if err != nil {
 		return err
 	}
 
-	if err := runGetTasks(client, cluster, &o.Services[0]); err != nil {
+	if err := runGetTasks(client, cluster, service); err != nil {
 		return err
 	}
 	return nil

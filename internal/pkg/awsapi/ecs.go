@@ -26,6 +26,21 @@ func (client Client) GetECSCluster(clusterName string) (*ecs.Cluster, error) {
 	return nil, xerrors.Errorf("Not found ECS Cluster %s", clusterName)
 }
 
+// GetECSService to get an ECS Service
+func (client Client) GetECSService(cluster *ecs.Cluster, serviceName string) (*ecs.Service, error) {
+	input := &ecs.DescribeServicesInput{
+		Cluster:  cluster.ClusterName,
+		Services: []string{serviceName},
+	}
+
+	req := client.ECSClient.DescribeServicesRequest(input)
+	result, err := req.Send(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return &result.DescribeServicesOutput.Services[0], nil
+}
+
 // DescribeECSClusters to describe clusters
 func (client Client) DescribeECSClusters() (*ecs.DescribeClustersOutput, error) {
 	listInput := &ecs.ListClustersInput{}
