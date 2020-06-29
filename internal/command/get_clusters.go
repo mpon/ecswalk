@@ -19,7 +19,7 @@ func NewCmdGetClusters() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			output, err := client.DescribeECSClusters()
+			clusters, err := client.GetAllECSClusters()
 			if err != nil {
 				return err
 			}
@@ -27,7 +27,7 @@ func NewCmdGetClusters() *cobra.Command {
 			w := new(tabwriter.Writer)
 			w.Init(os.Stdout, 0, 8, 1, '\t', 0)
 			fmt.Fprintln(w, "Name\tServices\tRunning\tPending\tInstances\t")
-			for _, cluster := range output.Clusters {
+			for _, cluster := range clusters {
 				fmt.Fprintf(w, "%s\t%d\t%d\t%d\t%d\t\n",
 					*cluster.ClusterName,
 					*cluster.ActiveServicesCount,

@@ -23,17 +23,17 @@ func NewCmdInstances() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			output, err := client.DescribeECSClusters()
+			clusters, err := client.GetAllECSClusters()
 			if err != nil {
 				return err
 			}
 
-			if len(output.Clusters) == 0 {
+			if len(clusters) == 0 {
 				fmt.Println("cluster not found")
 				return nil
 			}
 
-			cluster, err := fuzzyfinder.FindCluster(output.Clusters)
+			cluster, err := fuzzyfinder.FindCluster(clusters)
 			if err != nil {
 				// Abort fuzzyfinder
 				return nil

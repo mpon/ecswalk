@@ -12,7 +12,7 @@ import (
 
 // GetECSCluster to get an ECS cluster
 func (client Client) GetECSCluster(clusterName string) (*ecs.Cluster, error) {
-	output, err := client.DescribeECSClusters()
+	output, err := client.describeECSClusters()
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +59,16 @@ func (client Client) GetAllECSServices(cluster *ecs.Cluster) ([]*ecs.Service, er
 	return services, nil
 }
 
-// DescribeECSClusters to describe clusters
-func (client Client) DescribeECSClusters() (*ecs.DescribeClustersOutput, error) {
+// GetAllECSClusters to get all ECS Clusters
+func (client Client) GetAllECSClusters() ([]ecs.Cluster, error) {
+	output, err := client.describeECSClusters()
+	if err != nil {
+		return nil, err
+	}
+	return output.Clusters, nil
+}
+
+func (client Client) describeECSClusters() (*ecs.DescribeClustersOutput, error) {
 	listInput := &ecs.ListClustersInput{}
 	listReq := client.ECSClient.ListClustersRequest(listInput)
 	listRes, err := listReq.Send(context.Background())
