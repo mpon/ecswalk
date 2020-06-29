@@ -51,7 +51,7 @@ func (client Client) DescribeAllECSServices(cluster *ecs.Cluster) ([]*ecs.Descri
 	for _, s := range sliceutil.ChunkedSlice(serviceArns, maxAPILimitChunkSize) {
 		s := s
 		eg.Go(func() error {
-			describeServicesOutput, err := client.describeECSServices(cluster, s)
+			describeServicesOutput, err := client.DescribeECSServices(cluster, s)
 
 			select {
 			case <-ctx.Done():
@@ -121,10 +121,10 @@ func (client Client) DescribeTaskDefinitions(cluster *ecs.Cluster, services []*e
 }
 
 // ListECSTasks to list tasks of specified cluster and service
-func (client Client) ListECSTasks(cluster *ecs.Cluster, service string) (*ecs.ListTasksOutput, error) {
+func (client Client) ListECSTasks(cluster *ecs.Cluster, service *ecs.Service) (*ecs.ListTasksOutput, error) {
 	input := &ecs.ListTasksInput{
 		Cluster:     cluster.ClusterName,
-		ServiceName: aws.String(service),
+		ServiceName: service.ServiceName,
 	}
 
 	req := client.ECSClient.ListTasksRequest(input)
@@ -216,7 +216,8 @@ func (client Client) listECSServices(cluster *ecs.Cluster, nextToken *string, ou
 	return outputs, nil
 }
 
-func (client Client) describeECSServices(cluster *ecs.Cluster, services []string) (*ecs.DescribeServicesOutput, error) {
+// DescribeECSServices to describe ECS services
+func (client Client) DescribeECSServices(cluster *ecs.Cluster, services []string) (*ecs.DescribeServicesOutput, error) {
 	input := &ecs.DescribeServicesInput{
 		Cluster:  cluster.ClusterName,
 		Services: services,

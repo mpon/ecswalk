@@ -47,7 +47,12 @@ func getTasksCmdRun(clusterName string, service string) error {
 		}
 	}
 
-	containerInstanceArns, rows, err := describeTasks(cluster, service)
+	o, err := client.DescribeECSServices(cluster, []string{service})
+	if err != nil {
+		return err
+	}
+
+	containerInstanceArns, rows, err := describeTasks(cluster, &o.Services[0])
 	if err != nil {
 		return err
 	}
@@ -105,7 +110,7 @@ func getTasksCmdRun(clusterName string, service string) error {
 	return nil
 }
 
-func describeTasks(cluster *ecs.Cluster, service string) ([]string, GetTaskRows, error) {
+func describeTasks(cluster *ecs.Cluster, service *ecs.Service) ([]string, GetTaskRows, error) {
 	client, err := awsapi.NewClient()
 	if err != nil {
 		return []string{}, GetTaskRows{}, err
