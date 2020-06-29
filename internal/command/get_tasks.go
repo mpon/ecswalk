@@ -41,6 +41,7 @@ func getTasksCmdRun(clusterName string, service string) error {
 
 	output, err := client.DescribeECSClusters()
 	for _, c := range output.Clusters {
+		c := c
 		if *c.ClusterName == clusterName {
 			cluster = &c
 		}
