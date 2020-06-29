@@ -64,11 +64,11 @@ func runGetTasks(client *awsapi.Client, cluster *ecs.Cluster, service *ecs.Servi
 	ec2InstanceIds := []string{}
 
 	if len(containerInstanceArns) > 0 {
-		describeContainerInstancesOutput, err := client.DescribeContainerInstances(cluster, containerInstanceArns)
+		containerInstances, err := client.GetECSContainerInstances(cluster, containerInstanceArns)
 		if err != nil {
 			return xerrors.Errorf("message: %w", err)
 		}
-		for _, containerInstance := range describeContainerInstancesOutput.ContainerInstances {
+		for _, containerInstance := range containerInstances {
 			instances.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
 			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
 		}

@@ -241,8 +241,8 @@ func (client Client) ListAllContainerInstances(clusetr *ecs.Cluster) (*ecs.ListC
 	return result.ListContainerInstancesOutput, nil
 }
 
-// DescribeContainerInstances to describe container instances
-func (client Client) DescribeContainerInstances(cluster *ecs.Cluster, containerInstanceArns []string) (*ecs.DescribeContainerInstancesOutput, error) {
+// GetECSContainerInstances to get container instances
+func (client Client) GetECSContainerInstances(cluster *ecs.Cluster, containerInstanceArns []string) ([]ecs.ContainerInstance, error) {
 	input := &ecs.DescribeContainerInstancesInput{
 		Cluster:            cluster.ClusterName,
 		ContainerInstances: containerInstanceArns,
@@ -253,7 +253,7 @@ func (client Client) DescribeContainerInstances(cluster *ecs.Cluster, containerI
 	if err != nil {
 		return nil, xerrors.Errorf("ECS DescribeContainerInstances: %w", err)
 	}
-	return result.DescribeContainerInstancesOutput, nil
+	return result.DescribeContainerInstancesOutput.ContainerInstances, nil
 }
 
 func (client Client) listECSServicesRecursively(cluster *ecs.Cluster) ([]*ecs.ListServicesOutput, error) {

@@ -49,12 +49,12 @@ func NewCmdInstances() *cobra.Command {
 				return nil
 			}
 
-			res, err := client.DescribeContainerInstances(cluster, listOutput.ContainerInstanceArns)
+			containerInstances, err := client.GetECSContainerInstances(cluster, listOutput.ContainerInstanceArns)
 			if err != nil {
 				return err
 			}
 
-			instances := CreateInstances(res.ContainerInstances)
+			instances := CreateInstances(containerInstances)
 			ec2List := sliceutil.DistinctSlice(EC2InstanceIDs(instances))
 			output2, err := client.DescribeEC2Instances(ec2List)
 			if err != nil {
@@ -68,7 +68,7 @@ func NewCmdInstances() *cobra.Command {
 			}
 
 			rows := GetInstanceRows{}
-			for _, c := range res.ContainerInstances {
+			for _, c := range containerInstances {
 				var cpuAvailable int64
 				var memoryAvailable int64
 				for _, r := range c.RemainingResources {
