@@ -61,3 +61,7 @@ or pass config to command.
 ```bash
 ecswalk --config conf.yaml
 ```
+
+## Create Test Environment
+
+You can create by terraform [github.com/mpon/infra/ecswalk_test](https://github.com/mpon/infra/tree/master/terraform/ecswalk_test).
