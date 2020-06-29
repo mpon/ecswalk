@@ -227,10 +227,10 @@ func (client Client) describeTasks(cluster *ecs.Cluster, tasks []string) (*ecs.D
 	return result.DescribeTasksOutput, nil
 }
 
-// ListAllContainerInstances to list all container instances
-func (client Client) ListAllContainerInstances(clusetr *ecs.Cluster) (*ecs.ListContainerInstancesOutput, error) {
+// GetAllECSContainerInstances to get all ECS container instances
+func (client Client) GetAllECSContainerInstances(cluster *ecs.Cluster) ([]ecs.ContainerInstance, error) {
 	input := &ecs.ListContainerInstancesInput{
-		Cluster: clusetr.ClusterName,
+		Cluster: cluster.ClusterName,
 	}
 
 	req := client.ECSClient.ListContainerInstancesRequest(input)
@@ -238,7 +238,12 @@ func (client Client) ListAllContainerInstances(clusetr *ecs.Cluster) (*ecs.ListC
 	if err != nil {
 		return nil, err
 	}
-	return result.ListContainerInstancesOutput, nil
+
+	if len(result.ListContainerInstancesOutput.ContainerInstanceArns) == 0 {
+		return []ecs.ContainerInstance{}, nil
+	}
+
+	return client.GetECSContainerInstances(cluster, result.ListContainerInstancesOutput.ContainerInstanceArns)
 }
 
 // GetECSContainerInstances to get container instances
