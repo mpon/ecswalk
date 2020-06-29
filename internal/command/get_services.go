@@ -52,7 +52,7 @@ func runGetServices(client *awsapi.Client, cluster *ecs.Cluster) error {
 		return nil
 	}
 
-	describeTaskDefinitionOutputs, err := client.DescribeTaskDefinitions(cluster, services)
+	taskDefinitions, err := client.GetECSTaskDefinitions(cluster, services)
 	if err != nil {
 		return err
 	}
@@ -60,9 +60,9 @@ func runGetServices(client *awsapi.Client, cluster *ecs.Cluster) error {
 	rows := GetServiceRows{}
 	for _, service := range services {
 		td := ecs.TaskDefinition{}
-		for _, describeTaskDefinitionOutput := range describeTaskDefinitionOutputs {
-			if *service.TaskDefinition == *describeTaskDefinitionOutput.TaskDefinition.TaskDefinitionArn {
-				td = *describeTaskDefinitionOutput.TaskDefinition
+		for _, t := range taskDefinitions {
+			if *service.TaskDefinition == *t.TaskDefinitionArn {
+				td = t
 			}
 		}
 		for _, containerDefinition := range td.ContainerDefinitions {

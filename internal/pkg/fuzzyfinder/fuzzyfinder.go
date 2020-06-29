@@ -34,7 +34,7 @@ func FindCluster(clusters []ecs.Cluster) (*ecs.Cluster, error) {
 }
 
 // FindService find fuzzily ecs.Service
-func FindService(services []*ecs.Service) (*ecs.Service, error) {
+func FindService(services []ecs.Service) (*ecs.Service, error) {
 	idx, err := fuzzyfinder.Find(services,
 		func(i int) string {
 			s := services[i]
@@ -56,5 +56,5 @@ func FindService(services []*ecs.Service) (*ecs.Service, error) {
 		return nil, err
 	}
 
-	return services[idx], nil
+	return &services[idx], nil
 }

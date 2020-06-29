@@ -42,18 +42,18 @@ func (client Client) GetECSService(cluster *ecs.Cluster, serviceName string) (*e
 }
 
 // GetAllECSServices to get all ECS Services
-func (client Client) GetAllECSServices(cluster *ecs.Cluster) ([]*ecs.Service, error) {
+func (client Client) GetAllECSServices(cluster *ecs.Cluster) ([]ecs.Service, error) {
 	outputs, err := client.describeAllECSServices(cluster)
 	if err != nil {
 		return nil, err
 	}
 
 	// flatten list
-	var services []*ecs.Service
+	var services []ecs.Service
 	for _, o := range outputs {
 		for _, s := range o.Services {
 			s := s
-			services = append(services, &s)
+			services = append(services, s)
 		}
 	}
 	return services, nil
@@ -66,6 +66,20 @@ func (client Client) GetAllECSClusters() ([]ecs.Cluster, error) {
 		return nil, err
 	}
 	return output.Clusters, nil
+}
+
+// GetECSTaskDefinitions to get ECS task definition list
+func (client Client) GetECSTaskDefinitions(cluster *ecs.Cluster, services []ecs.Service) ([]ecs.TaskDefinition, error) {
+	outputs, err := client.describeTaskDefinitions(cluster, services)
+	if err != nil {
+		return nil, err
+	}
+
+	var taskDefinitions []ecs.TaskDefinition
+	for _, o := range outputs {
+		taskDefinitions = append(taskDefinitions, *o.TaskDefinition)
+	}
+	return taskDefinitions, nil
 }
 
 func (client Client) describeECSClusters() (*ecs.DescribeClustersOutput, error) {
@@ -140,8 +154,7 @@ func (client Client) describeTaskDefinition(taskDefinitionArn string) (*ecs.Desc
 	return result.DescribeTaskDefinitionOutput, nil
 }
 
-// DescribeTaskDefinitions describe with task definition about all services
-func (client Client) DescribeTaskDefinitions(cluster *ecs.Cluster, services []*ecs.Service) ([]*ecs.DescribeTaskDefinitionOutput, error) {
+func (client Client) describeTaskDefinitions(cluster *ecs.Cluster, services []ecs.Service) ([]*ecs.DescribeTaskDefinitionOutput, error) {
 	const maxAPILimitChunkSize = 10
 	taskDefinitions := []string{}
 	outputs := []*ecs.DescribeTaskDefinitionOutput{}
