@@ -10,6 +10,22 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// GetECSCluster to get an ECS cluster
+func (client Client) GetECSCluster(clusterName string) (*ecs.Cluster, error) {
+	output, err := client.DescribeECSClusters()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, c := range output.Clusters {
+		c := c
+		if *c.ClusterName == clusterName {
+			return &c, nil
+		}
+	}
+	return nil, xerrors.Errorf("Not found ECS Cluster %s", clusterName)
+}
+
 // DescribeECSClusters to describe clusters
 func (client Client) DescribeECSClusters() (*ecs.DescribeClustersOutput, error) {
 	listInput := &ecs.ListClustersInput{}

@@ -33,18 +33,14 @@ func NewCmdGetTasks() *cobra.Command {
 }
 
 func runGetTasksCmd(clusterName string, service string) error {
-	var cluster *ecs.Cluster
 	client, err := awsapi.NewClient()
 	if err != nil {
 		return err
 	}
 
-	output, err := client.DescribeECSClusters()
-	for _, c := range output.Clusters {
-		c := c
-		if *c.ClusterName == clusterName {
-			cluster = &c
-		}
+	cluster, err := client.GetECSCluster(clusterName)
+	if err != nil {
+		return err
 	}
 
 	o, err := client.DescribeECSServices(cluster, []string{service})

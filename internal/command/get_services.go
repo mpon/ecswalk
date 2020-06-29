@@ -28,23 +28,14 @@ func NewCmdGetServices() *cobra.Command {
 }
 
 func runGetServicesCmd(clusterName string) error {
-	var cluster *ecs.Cluster
-
 	client, err := awsapi.NewClient()
 	if err != nil {
 		return err
 	}
 
-	output, err := client.DescribeECSClusters()
+	cluster, err := client.GetECSCluster(clusterName)
 	if err != nil {
 		return err
-	}
-
-	for _, c := range output.Clusters {
-		c := c
-		if *c.ClusterName == clusterName {
-			cluster = &c
-		}
 	}
 
 	return runGetServices(client, cluster)
