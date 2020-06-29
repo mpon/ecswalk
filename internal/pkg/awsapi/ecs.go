@@ -121,7 +121,7 @@ func (client Client) describeAllECSServices(cluster *ecs.Cluster) ([]*ecs.Descri
 	for _, s := range sliceutil.ChunkedSlice(serviceArns, maxAPILimitChunkSize) {
 		s := s
 		eg.Go(func() error {
-			describeServicesOutput, err := client.DescribeECSServices(cluster, s)
+			describeServicesOutput, err := client.describeECSServices(cluster, s)
 
 			select {
 			case <-ctx.Done():
@@ -293,8 +293,7 @@ func (client Client) listECSServices(cluster *ecs.Cluster, nextToken *string, ou
 	return outputs, nil
 }
 
-// DescribeECSServices to describe ECS services
-func (client Client) DescribeECSServices(cluster *ecs.Cluster, services []string) (*ecs.DescribeServicesOutput, error) {
+func (client Client) describeECSServices(cluster *ecs.Cluster, services []string) (*ecs.DescribeServicesOutput, error) {
 	input := &ecs.DescribeServicesInput{
 		Cluster:  cluster.ClusterName,
 		Services: services,
