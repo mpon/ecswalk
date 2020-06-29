@@ -128,9 +128,9 @@ func (client Client) DescribeTaskDefinitions(cluster string, services []string) 
 }
 
 // ListECSTasks to list tasks of specified cluster and service
-func (client Client) ListECSTasks(cluster string, service string) (*ecs.ListTasksOutput, error) {
+func (client Client) ListECSTasks(cluster *ecs.Cluster, service string) (*ecs.ListTasksOutput, error) {
 	input := &ecs.ListTasksInput{
-		Cluster:     aws.String(cluster),
+		Cluster:     cluster.ClusterName,
 		ServiceName: aws.String(service),
 	}
 
@@ -143,9 +143,9 @@ func (client Client) ListECSTasks(cluster string, service string) (*ecs.ListTask
 }
 
 // DescribeTasks to describe specified cluster and tasks
-func (client Client) DescribeTasks(cluster string, tasks []string) (*ecs.DescribeTasksOutput, error) {
+func (client Client) DescribeTasks(cluster *ecs.Cluster, tasks []string) (*ecs.DescribeTasksOutput, error) {
 	input := &ecs.DescribeTasksInput{
-		Cluster: aws.String(cluster),
+		Cluster: cluster.ClusterName,
 		Tasks:   tasks,
 	}
 
@@ -157,9 +157,10 @@ func (client Client) DescribeTasks(cluster string, tasks []string) (*ecs.Describ
 	return result.DescribeTasksOutput, nil
 }
 
-func (client Client) listAllContainerInstances(cluster string) (*ecs.ListContainerInstancesOutput, error) {
+// ListAllContainerInstances to list all container instances
+func (client Client) ListAllContainerInstances(clusetr *ecs.Cluster) (*ecs.ListContainerInstancesOutput, error) {
 	input := &ecs.ListContainerInstancesInput{
-		Cluster: aws.String(cluster),
+		Cluster: clusetr.ClusterName,
 	}
 
 	req := client.ECSClient.ListContainerInstancesRequest(input)
@@ -170,21 +171,11 @@ func (client Client) listAllContainerInstances(cluster string) (*ecs.ListContain
 	return result.ListContainerInstancesOutput, nil
 }
 
-// DescribeAllContainerInstances to describe all container instances
-func (client Client) DescribeAllContainerInstances(cluster string) (*ecs.DescribeContainerInstancesOutput, error) {
-	output, err := client.listAllContainerInstances(cluster)
-	if err != nil {
-		return nil, err
-	}
-
-	return client.DescribeContainerInstances(cluster, output.ContainerInstanceArns)
-}
-
 // DescribeContainerInstances to describe container instances
-func (client Client) DescribeContainerInstances(cluster string, containerInstances []string) (*ecs.DescribeContainerInstancesOutput, error) {
+func (client Client) DescribeContainerInstances(cluster *ecs.Cluster, containerInstanceArns []string) (*ecs.DescribeContainerInstancesOutput, error) {
 	input := &ecs.DescribeContainerInstancesInput{
-		Cluster:            aws.String(cluster),
-		ContainerInstances: containerInstances,
+		Cluster:            cluster.ClusterName,
+		ContainerInstances: containerInstanceArns,
 	}
 
 	req := client.ECSClient.DescribeContainerInstancesRequest(input)

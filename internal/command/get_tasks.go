@@ -32,17 +32,26 @@ func NewCmdGetTasks() *cobra.Command {
 	return cmd
 }
 
-func getTasksCmdRun(cluster string, service string) error {
+func getTasksCmdRun(clusterName string, service string) error {
+	var cluster *ecs.Cluster
+	client, err := awsapi.NewClient()
+	if err != nil {
+		return err
+	}
+
+	output, err := client.DescribeECSClusters()
+	for _, c := range output.Clusters {
+		if *c.ClusterName == clusterName {
+			cluster = &c
+		}
+	}
+
 	containerInstanceArns, rows, err := describeTasks(cluster, service)
 	if err != nil {
 		return err
 	}
 	instances := NewInstances(containerInstanceArns)
 
-	client, err := awsapi.NewClient()
-	if err != nil {
-		return err
-	}
 	ec2InstanceIds := []string{}
 
 	if len(containerInstanceArns) > 0 {
@@ -95,7 +104,7 @@ func getTasksCmdRun(cluster string, service string) error {
 	return nil
 }
 
-func describeTasks(cluster string, service string) ([]string, GetTaskRows, error) {
+func describeTasks(cluster *ecs.Cluster, service string) ([]string, GetTaskRows, error) {
 	client, err := awsapi.NewClient()
 	if err != nil {
 		return []string{}, GetTaskRows{}, err

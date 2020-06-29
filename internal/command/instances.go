@@ -39,7 +39,17 @@ func NewCmdInstances() *cobra.Command {
 				return nil
 			}
 
-			res, err := client.DescribeAllContainerInstances(*cluster.ClusterName)
+			listOutput, err := client.ListAllContainerInstances(cluster)
+			if err != nil {
+				return err
+			}
+
+			if len(listOutput.ContainerInstanceArns) == 0 {
+				fmt.Printf("%s has no container instances\n", *cluster.ClusterName)
+				return nil
+			}
+
+			res, err := client.DescribeContainerInstances(cluster, listOutput.ContainerInstanceArns)
 			if err != nil {
 				return err
 			}
