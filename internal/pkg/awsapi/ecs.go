@@ -188,23 +188,32 @@ func (client Client) describeTaskDefinitions(cluster *ecs.Cluster, services []ec
 	return outputs, nil
 }
 
-// ListECSTasks to list tasks of specified cluster and service
-func (client Client) ListECSTasks(cluster *ecs.Cluster, service *ecs.Service) (*ecs.ListTasksOutput, error) {
+// GetECSTasks to get ECS tasks of specified cluster and service
+func (client Client) GetECSTasks(cluster *ecs.Cluster, service *ecs.Service) ([]ecs.Task, error) {
 	input := &ecs.ListTasksInput{
 		Cluster:     cluster.ClusterName,
 		ServiceName: service.ServiceName,
 	}
 
 	req := client.ECSClient.ListTasksRequest(input)
-	result, err := req.Send(context.Background())
+	output, err := req.Send(context.Background())
 	if err != nil {
 		return nil, xerrors.Errorf("ECS ListTasks: %w", err)
 	}
-	return result.ListTasksOutput, nil
+
+	if len(output.TaskArns) == 0 {
+		return []ecs.Task{}, nil
+	}
+
+	res, err := client.describeTasks(cluster, output.TaskArns)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Tasks, nil
 }
 
-// DescribeTasks to describe specified cluster and tasks
-func (client Client) DescribeTasks(cluster *ecs.Cluster, tasks []string) (*ecs.DescribeTasksOutput, error) {
+func (client Client) describeTasks(cluster *ecs.Cluster, tasks []string) (*ecs.DescribeTasksOutput, error) {
 	input := &ecs.DescribeTasksInput{
 		Cluster: cluster.ClusterName,
 		Tasks:   tasks,

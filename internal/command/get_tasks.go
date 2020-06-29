@@ -121,21 +121,12 @@ func describeTasks(cluster *ecs.Cluster, service *ecs.Service) ([]string, GetTas
 	containerInstanceArns := []string{}
 	rows := GetTaskRows{}
 
-	listTasksOutput, err := client.ListECSTasks(cluster, service)
+	tasks, err := client.GetECSTasks(cluster, service)
 	if err != nil {
 		return []string{}, GetTaskRows{}, err
 	}
-	var ecsTasks []ecs.Task = []ecs.Task{}
 
-	if len(listTasksOutput.TaskArns) > 0 {
-		describeTasksOutput, err := client.DescribeTasks(cluster, listTasksOutput.TaskArns)
-		if err != nil {
-			return []string{}, GetTaskRows{}, err
-		}
-		ecsTasks = describeTasksOutput.Tasks
-	}
-
-	for _, task := range ecsTasks {
+	for _, task := range tasks {
 		rows = append(rows, &GetTaskRow{
 			TaskID:               awsapi.ShortArn(*task.TaskArn),
 			TaskDefinition:       awsapi.ShortArn(*task.TaskDefinitionArn),
