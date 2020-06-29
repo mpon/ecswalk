@@ -21,7 +21,7 @@ func NewCmdGetTasks() *cobra.Command {
 		Use:   "tasks",
 		Short: "get Tasks specified service",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return getTasksCmdRun(getTasksCmdFlagCluster, getTasksCmdFlagService)
+			return runGetTasksCmd(getTasksCmdFlagCluster, getTasksCmdFlagService)
 		},
 	}
 	cmd.Flags().StringVarP(&getTasksCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
@@ -32,7 +32,7 @@ func NewCmdGetTasks() *cobra.Command {
 	return cmd
 }
 
-func getTasksCmdRun(clusterName string, service string) error {
+func runGetTasksCmd(clusterName string, service string) error {
 	var cluster *ecs.Cluster
 	client, err := awsapi.NewClient()
 	if err != nil {
@@ -52,7 +52,14 @@ func getTasksCmdRun(clusterName string, service string) error {
 		return err
 	}
 
-	containerInstanceArns, rows, err := describeTasks(cluster, &o.Services[0])
+	if err := runGetTasks(client, cluster, &o.Services[0]); err != nil {
+		return err
+	}
+	return nil
+}
+
+func runGetTasks(client *awsapi.Client, cluster *ecs.Cluster, service *ecs.Service) error {
+	containerInstanceArns, rows, err := describeTasks(cluster, service)
 	if err != nil {
 		return err
 	}

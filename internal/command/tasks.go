@@ -58,7 +58,7 @@ func NewCmdTasks() *cobra.Command {
 				return nil
 			}
 
-			getTasksCmdRun(*cluster.ClusterName, *service.ServiceName)
+			runGetTasks(client, cluster, service)
 			return nil
 		},
 	}
