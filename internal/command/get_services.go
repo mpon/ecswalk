@@ -46,11 +46,12 @@ func getServicesCmdRun(clusterName string) error {
 	if err != nil {
 		return err
 	}
-	services := []ecs.Service{}
+	services := []*ecs.Service{}
 	serviceArns := []string{}
 	for _, describeServiceOutput := range describeServicesOutputs {
 		for _, service := range describeServiceOutput.Services {
-			services = append(services, service)
+			service := service
+			services = append(services, &service)
 			serviceArns = append(serviceArns, *service.ServiceArn)
 		}
 	}
@@ -60,7 +61,7 @@ func getServicesCmdRun(clusterName string) error {
 		return nil
 	}
 
-	describeTaskDefinitionOutputs, err := client.DescribeTaskDefinitions(cluster, serviceArns)
+	describeTaskDefinitionOutputs, err := client.DescribeTaskDefinitions(cluster, services)
 	if err != nil {
 		return err
 	}

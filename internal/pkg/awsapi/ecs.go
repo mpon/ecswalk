@@ -86,20 +86,13 @@ func (client Client) DescribeTaskDefinition(taskDefinitionArn string) (*ecs.Desc
 }
 
 // DescribeTaskDefinitions describe with task definition about all services
-func (client Client) DescribeTaskDefinitions(cluster *ecs.Cluster, services []string) ([]*ecs.DescribeTaskDefinitionOutput, error) {
+func (client Client) DescribeTaskDefinitions(cluster *ecs.Cluster, services []*ecs.Service) ([]*ecs.DescribeTaskDefinitionOutput, error) {
 	const maxAPILimitChunkSize = 10
 	taskDefinitions := []string{}
 	outputs := []*ecs.DescribeTaskDefinitionOutput{}
 
-	describeServicesOutput, err := client.DescribeAllECSServices(cluster)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, o := range describeServicesOutput {
-		for _, s := range o.Services {
-			taskDefinitions = append(taskDefinitions, *s.TaskDefinition)
-		}
+	for _, s := range services {
+		taskDefinitions = append(taskDefinitions, *s.TaskDefinition)
 	}
 
 	eg, ctx := errgroup.WithContext(context.Background())
