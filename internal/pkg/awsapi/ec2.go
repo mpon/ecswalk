@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
-// DescribeEC2Instances to describe instances
-func (client Client) DescribeEC2Instances(instanceIds []string) (*ec2.DescribeInstancesOutput, error) {
+// GetEC2Instances to describe instances
+func (client Client) GetEC2Instances(instanceIds []string) ([]ec2.Instance, error) {
 	input := &ec2.DescribeInstancesInput{
 		InstanceIds: instanceIds,
 	}
@@ -17,5 +17,13 @@ func (client Client) DescribeEC2Instances(instanceIds []string) (*ec2.DescribeIn
 	if err != nil {
 		return nil, err
 	}
-	return result.DescribeInstancesOutput, nil
+
+	var instances []ec2.Instance
+
+	for _, r := range result.DescribeInstancesOutput.Reservations {
+		for _, i := range r.Instances {
+			instances = append(instances, i)
+		}
+	}
+	return instances, nil
 }

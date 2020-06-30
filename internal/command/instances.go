@@ -51,15 +51,13 @@ func NewCmdInstances() *cobra.Command {
 
 			instances := CreateInstances(containerInstances)
 			ec2List := sliceutil.DistinctSlice(EC2InstanceIDs(instances))
-			output2, err := client.DescribeEC2Instances(ec2List)
+			ec2Instances, err := client.GetEC2Instances(ec2List)
 			if err != nil {
 				return err
 			}
 
-			for _, reserv := range output2.Reservations {
-				for _, i := range reserv.Instances {
-					instances.UpdatePrivateIPByInstanceID(*i.PrivateIpAddress, *i.InstanceId)
-				}
+			for _, i := range ec2Instances {
+				instances.UpdatePrivateIPByInstanceID(*i.PrivateIpAddress, *i.InstanceId)
 			}
 
 			rows := GetInstanceRows{}

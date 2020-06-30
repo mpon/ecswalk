@@ -13,18 +13,6 @@ type ECSServiceInfo struct {
 	TaskDefinition ecs.TaskDefinition
 }
 
-// for _, containerDefinition := range td.ContainerDefinitions {
-// 	image, tag := awsapi.ShortDockerImage(*containerDefinition.Image)
-// 	rows = append(rows, GetServiceRow{
-// 		Name:           *service.ServiceName,
-// 		TaskDefinition: awsapi.ShortArn(*td.TaskDefinitionArn),
-// 		Image:          image,
-// 		Tag:            tag,
-// 		DesiredCount:   *service.DesiredCount,
-// 		RunningCount:   *service.RunningCount,
-// 	})
-// }
-
 // TaskDefinitionArn return ECS task definition short ARN
 func (s ECSServiceInfo) TaskDefinitionArn() string {
 	return ShortArn(*s.TaskDefinition.TaskDefinitionArn)

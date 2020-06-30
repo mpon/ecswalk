@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
-	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"github.com/spf13/cobra"
 	"golang.org/x/xerrors"
 )
@@ -55,87 +54,45 @@ func runGetTasksCmd(clusterName string, serviceName string) error {
 }
 
 func runGetTasks(client *awsapi.Client, cluster *ecs.Cluster, service *ecs.Service) error {
-	containerInstanceArns, rows, err := describeTasks(cluster, service)
+
+	tasks, err := client.GetECSTasks(cluster, service)
 	if err != nil {
 		return err
 	}
-	instances := NewInstances(containerInstanceArns)
 
-	ec2InstanceIds := []string{}
+	taskInfoList := awsapi.NewECSTaskInfoList(tasks)
+	containerInstanceArns := taskInfoList.ContainerInstanceArns()
 
 	if len(containerInstanceArns) > 0 {
 		containerInstances, err := client.GetECSContainerInstances(cluster, containerInstanceArns)
 		if err != nil {
-			return xerrors.Errorf("message: %w", err)
+			return xerrors.Errorf("GetECSContainerInstances: %w", err)
 		}
-		for _, containerInstance := range containerInstances {
-			instances.UpdateEC2InstanceIDByArn(*containerInstance.Ec2InstanceId, *containerInstance.ContainerInstanceArn)
-			ec2InstanceIds = append(ec2InstanceIds, *containerInstance.Ec2InstanceId)
-		}
-		ec2InstanceIds = sliceutil.DistinctSlice(ec2InstanceIds)
 
-		describeInstancesOutput, err := client.DescribeEC2Instances(ec2InstanceIds)
+		taskInfoList.SetContainerInstances(containerInstances)
+
+		instances, err := client.GetEC2Instances(taskInfoList.EC2InstanceIds())
 		if err != nil {
 			return err
 		}
 
-		for _, reservation := range describeInstancesOutput.Reservations {
-			for _, instance := range reservation.Instances {
-				instances.UpdatePrivateIPByInstanceID(*instance.PrivateIpAddress, *instance.InstanceId)
-			}
-		}
+		taskInfoList.SetEC2Instances(instances)
 	}
 
-	for _, row := range rows {
-		for _, data := range instances {
-			if row.ContainerInstanceArn == data.ContainerInstanceArn {
-				row.EC2InstanceID = data.EC2InstanceID
-				row.PrivateIP = data.PrivateIP
-			}
-		}
-	}
-
-	sort.Sort(rows)
+	sort.Sort(taskInfoList)
 
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
 	fmt.Fprintln(w, "TaskId\tTaskDefinition\tStatus\tEC2Instance\tPrivateIp")
-	for _, row := range rows {
+	for _, info := range taskInfoList {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			row.TaskID,
-			row.TaskDefinition,
-			row.Status,
-			row.EC2InstanceID,
-			row.PrivateIP,
+			info.ShortTaskArn(),
+			info.ShortTaskDefinitionArn(),
+			*info.Task.LastStatus,
+			*info.Instance.InstanceId,
+			*info.Instance.PrivateIpAddress,
 		)
 	}
 	w.Flush()
 	return nil
-}
-
-func describeTasks(cluster *ecs.Cluster, service *ecs.Service) ([]string, GetTaskRows, error) {
-	client, err := awsapi.NewClient()
-	if err != nil {
-		return []string{}, GetTaskRows{}, err
-	}
-	containerInstanceArns := []string{}
-	rows := GetTaskRows{}
-
-	tasks, err := client.GetECSTasks(cluster, service)
-	if err != nil {
-		return []string{}, GetTaskRows{}, err
-	}
-
-	for _, task := range tasks {
-		rows = append(rows, &GetTaskRow{
-			TaskID:               awsapi.ShortArn(*task.TaskArn),
-			TaskDefinition:       awsapi.ShortArn(*task.TaskDefinitionArn),
-			Status:               *task.LastStatus,
-			ContainerInstanceArn: *task.ContainerInstanceArn,
-		})
-		containerInstanceArns = append(containerInstanceArns, *task.ContainerInstanceArn)
-	}
-	containerInstanceArns = sliceutil.DistinctSlice(containerInstanceArns)
-
-	return containerInstanceArns, rows, nil
 }
