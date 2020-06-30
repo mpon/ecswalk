@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 	"os"
-	"sort"
 	"text/tabwriter"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -57,39 +56,19 @@ func runGetServices(client *awsapi.Client, cluster *ecs.Cluster) error {
 		return err
 	}
 
-	rows := GetServiceRows{}
-	for _, service := range services {
-		td := ecs.TaskDefinition{}
-		for _, t := range taskDefinitions {
-			if *service.TaskDefinition == *t.TaskDefinitionArn {
-				td = t
-			}
-		}
-		for _, containerDefinition := range td.ContainerDefinitions {
-			image, tag := awsapi.ShortDockerImage(*containerDefinition.Image)
-			rows = append(rows, GetServiceRow{
-				Name:           *service.ServiceName,
-				TaskDefinition: awsapi.ShortArn(*td.TaskDefinitionArn),
-				Image:          image,
-				Tag:            tag,
-				DesiredCount:   *service.DesiredCount,
-				RunningCount:   *service.RunningCount,
-			})
-		}
-	}
-	sort.Sort(rows)
+	ecsServiceInfoList := awsapi.NewECSServiceInfoList(services, taskDefinitions)
 
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
 	fmt.Fprintln(w, "Name\tTaskDefinition\tImage\tTag\tDesired\tRunning\t")
-	for _, row := range rows {
+	for _, s := range ecsServiceInfoList {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%d\t\n",
-			row.Name,
-			row.TaskDefinition,
-			row.Image,
-			row.Tag,
-			row.DesiredCount,
-			row.RunningCount)
+			*s.Service.ServiceName,
+			s.TaskDefinitionArn(),
+			s.DockerImageName(),
+			s.DockerImageTag(),
+			*s.Service.DesiredCount,
+			*s.Service.RunningCount)
 	}
 	w.Flush()
 	return nil
