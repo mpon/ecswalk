@@ -15,28 +15,36 @@ func NewCmdGetClusters() *cobra.Command {
 		Use:   "clusters",
 		Short: "get ECS clusters",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := awsapi.NewClient()
-			if err != nil {
-				return err
-			}
-			clusters, err := client.GetAllECSClusters()
-			if err != nil {
-				return err
-			}
-
-			w := new(tabwriter.Writer)
-			w.Init(os.Stdout, 0, 8, 1, '\t', 0)
-			fmt.Fprintln(w, "Name\tServices\tRunning\tPending\tInstances\t")
-			for _, cluster := range clusters {
-				fmt.Fprintf(w, "%s\t%d\t%d\t%d\t%d\t\n",
-					*cluster.ClusterName,
-					*cluster.ActiveServicesCount,
-					*cluster.RunningTasksCount,
-					*cluster.PendingTasksCount,
-					*cluster.RegisteredContainerInstancesCount)
-			}
-			w.Flush()
-			return nil
+			return runGetClustersCmd()
 		},
 	}
+}
+
+func runGetClustersCmd() error {
+	client, err := awsapi.NewClient()
+	if err != nil {
+		return err
+	}
+	return runGetClusters(client)
+}
+
+func runGetClusters(client *awsapi.Client) error {
+	clusters, err := client.GetAllECSClusters()
+	if err != nil {
+		return err
+	}
+
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
+	fmt.Fprintln(w, "Name\tServices\tRunning\tPending\tInstances\t")
+	for _, cluster := range clusters {
+		fmt.Fprintf(w, "%s\t%d\t%d\t%d\t%d\t\n",
+			*cluster.ClusterName,
+			*cluster.ActiveServicesCount,
+			*cluster.RunningTasksCount,
+			*cluster.PendingTasksCount,
+			*cluster.RegisteredContainerInstancesCount)
+	}
+	w.Flush()
+	return nil
 }
