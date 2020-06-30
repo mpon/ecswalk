@@ -40,6 +40,7 @@ func Execute(version string) {
 	cmdGet.AddCommand(NewCmdGetClusters())
 	cmdGet.AddCommand(NewCmdGetServices())
 	cmdGet.AddCommand(NewCmdGetTasks())
+	cmdGet.AddCommand(NewCmdGetInstances())
 
 	cmdServices := NewCmdServices()
 
