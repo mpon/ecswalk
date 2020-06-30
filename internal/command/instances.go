@@ -3,13 +3,10 @@ package command
 import (
 	"fmt"
 	"os"
-	"sort"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/mpon/ecswalk/internal/pkg/awsapi"
 	"github.com/mpon/ecswalk/internal/pkg/fuzzyfinder"
-	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 	"github.com/spf13/cobra"
 )
 
@@ -49,60 +46,30 @@ func NewCmdInstances() *cobra.Command {
 				return nil
 			}
 
-			instances := CreateInstances(containerInstances)
-			ec2List := sliceutil.DistinctSlice(EC2InstanceIDs(instances))
-			ec2Instances, err := client.GetEC2Instances(ec2List)
+			cList := awsapi.NewECSContainerInstanceInfoList(containerInstances)
+
+			ec2Instances, err := client.GetEC2Instances(cList.Ec2InstanceIds())
 			if err != nil {
 				return err
 			}
 
-			for _, i := range ec2Instances {
-				instances.UpdatePrivateIPByInstanceID(*i.PrivateIpAddress, *i.InstanceId)
-			}
-
-			rows := GetInstanceRows{}
-			for _, c := range containerInstances {
-				var cpuAvailable int64
-				var memoryAvailable int64
-				for _, r := range c.RemainingResources {
-					if *r.Name == "CPU" {
-						cpuAvailable = *r.IntegerValue
-					}
-					if *r.Name == "MEMORY" {
-						memoryAvailable = *r.IntegerValue
-					}
-				}
-
-				rows = append(rows, &GetInstanceRow{
-					ContainerInstanceArn: awsapi.ShortArn(*c.ContainerInstanceArn),
-					EC2InstanceID:        *c.Ec2InstanceId,
-					AgentConnected:       *c.AgentConnected,
-					Status:               *c.Status,
-					RunningTasksCount:    *c.RunningTasksCount,
-					CPUAvailable:         cpuAvailable,
-					MemoryAvailable:      memoryAvailable,
-					AgentVersion:         *c.VersionInfo.AgentVersion,
-					DockerVersion:        strings.Replace(*c.VersionInfo.DockerVersion, "DockerVersion: ", "", -1),
-					PrivateIP:            FindPrivateIP(instances, *c.Ec2InstanceId),
-				})
-			}
-			sort.Sort(rows)
+			cList.SetEC2Instances(ec2Instances)
 
 			w := new(tabwriter.Writer)
 			w.Init(os.Stdout, 0, 8, 1, '\t', 0)
 			fmt.Fprintln(w, "ContainerInstance\tEC2Instance\tPrivateIP\tConnected\tStatus\tRunning\tCPU\tMemory\tAgent\tDocker")
-			for _, row := range rows {
+			for _, info := range cList {
 				fmt.Fprintf(w, "%s\t%s\t%s\t%v\t%s\t%d\t%d\t%d\t%s\t%s\n",
-					row.ContainerInstanceArn,
-					row.EC2InstanceID,
-					row.PrivateIP,
-					row.AgentConnected,
-					row.Status,
-					row.RunningTasksCount,
-					row.CPUAvailable,
-					row.MemoryAvailable,
-					row.AgentVersion,
-					row.DockerVersion,
+					info.ShortContainerInstanceArn(),
+					*info.Ec2Instance.InstanceId,
+					*info.Ec2Instance.PrivateIpAddress,
+					*info.ContainerInstance.AgentConnected,
+					*info.ContainerInstance.Status,
+					*info.ContainerInstance.RunningTasksCount,
+					*info.CPUAvailable(),
+					*info.MemoryAvailable(),
+					*info.ContainerInstance.VersionInfo.AgentVersion,
+					info.DockerVersion(),
 				)
 			}
 			w.Flush()
