@@ -6,28 +6,28 @@ import (
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 )
 
-// ECSTaskInfo represents ...
-type ECSTaskInfo struct {
+// EcsTaskInfo represents ...
+type EcsTaskInfo struct {
 	Task              ecs.Task
 	ContainerInstance *ecs.ContainerInstance
 	Instance          *ec2.Instance
 }
 
 // ShortTaskArn returns short task arn
-func (t ECSTaskInfo) ShortTaskArn() string {
+func (t EcsTaskInfo) ShortTaskArn() string {
 	return ShortArn(*t.Task.TaskArn)
 }
 
 // ShortTaskDefinitionArn return short task arn
-func (t ECSTaskInfo) ShortTaskDefinitionArn() string {
+func (t EcsTaskInfo) ShortTaskDefinitionArn() string {
 	return ShortArn(*t.Task.TaskDefinitionArn)
 }
 
-// NewECSTaskInfoList ...
-func NewECSTaskInfoList(tasks []ecs.Task) ECSTaskInfoList {
-	var taskInfoList ECSTaskInfoList
+// NewEcsTaskInfoList ...
+func NewEcsTaskInfoList(tasks []ecs.Task) EcsTaskInfoList {
+	var taskInfoList EcsTaskInfoList
 	for _, t := range tasks {
-		taskInfoList = append(taskInfoList, &ECSTaskInfo{
+		taskInfoList = append(taskInfoList, &EcsTaskInfo{
 			Task: t,
 		})
 	}
@@ -35,7 +35,7 @@ func NewECSTaskInfoList(tasks []ecs.Task) ECSTaskInfoList {
 }
 
 // ContainerInstanceArns returns distinct arns
-func (tList ECSTaskInfoList) ContainerInstanceArns() []string {
+func (tList EcsTaskInfoList) ContainerInstanceArns() []string {
 	var arns []string
 	for _, t := range tList {
 		arns = append(arns, *t.Task.ContainerInstanceArn)
@@ -44,8 +44,8 @@ func (tList ECSTaskInfoList) ContainerInstanceArns() []string {
 	return sliceutil.DistinctSlice(arns)
 }
 
-// EC2InstanceIds returns distinct instance ids
-func (tList ECSTaskInfoList) EC2InstanceIds() []string {
+// Ec2InstanceIds returns distinct instance ids
+func (tList EcsTaskInfoList) Ec2InstanceIds() []string {
 	var ids []string
 	for _, t := range tList {
 		ids = append(ids, *t.ContainerInstance.Ec2InstanceId)
@@ -55,7 +55,7 @@ func (tList ECSTaskInfoList) EC2InstanceIds() []string {
 }
 
 // SetContainerInstances ...
-func (tList ECSTaskInfoList) SetContainerInstances(containerInstances []ecs.ContainerInstance) {
+func (tList EcsTaskInfoList) SetContainerInstances(containerInstances []ecs.ContainerInstance) {
 	for _, t := range tList {
 		for _, c := range containerInstances {
 			if *c.ContainerInstanceArn == *t.Task.ContainerInstanceArn {
@@ -65,8 +65,8 @@ func (tList ECSTaskInfoList) SetContainerInstances(containerInstances []ecs.Cont
 	}
 }
 
-// SetEC2Instances ...
-func (tList ECSTaskInfoList) SetEC2Instances(instances []ec2.Instance) {
+// SetEc2Instances ...
+func (tList EcsTaskInfoList) SetEc2Instances(instances []ec2.Instance) {
 	for _, t := range tList {
 		for _, i := range instances {
 			if *i.InstanceId == *t.ContainerInstance.Ec2InstanceId {
@@ -76,17 +76,17 @@ func (tList ECSTaskInfoList) SetEC2Instances(instances []ec2.Instance) {
 	}
 }
 
-// ECSTaskInfoList slice
-type ECSTaskInfoList []*ECSTaskInfo
+// EcsTaskInfoList slice
+type EcsTaskInfoList []*EcsTaskInfo
 
-func (tList ECSTaskInfoList) Len() int {
+func (tList EcsTaskInfoList) Len() int {
 	return len(tList)
 }
 
-func (tList ECSTaskInfoList) Swap(i, j int) {
+func (tList EcsTaskInfoList) Swap(i, j int) {
 	tList[i], tList[j] = tList[j], tList[i]
 }
 
-func (tList ECSTaskInfoList) Less(i, j int) bool {
+func (tList EcsTaskInfoList) Less(i, j int) bool {
 	return *tList[i].Task.TaskArn < *tList[j].Task.TaskArn
 }

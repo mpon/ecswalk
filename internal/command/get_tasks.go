@@ -37,12 +37,12 @@ func runGetTasksCmd(clusterName string, serviceName string) error {
 		return err
 	}
 
-	cluster, err := client.GetECSCluster(clusterName)
+	cluster, err := client.GetEcsCluster(clusterName)
 	if err != nil {
 		return err
 	}
 
-	service, err := client.GetECSService(cluster, serviceName)
+	service, err := client.GetEcsService(cluster, serviceName)
 	if err != nil {
 		return err
 	}
@@ -55,28 +55,28 @@ func runGetTasksCmd(clusterName string, serviceName string) error {
 
 func runGetTasks(client *awsapi.Client, cluster *ecs.Cluster, service *ecs.Service) error {
 
-	tasks, err := client.GetECSTasks(cluster, service)
+	tasks, err := client.GetEcsTasks(cluster, service)
 	if err != nil {
 		return err
 	}
 
-	taskInfoList := awsapi.NewECSTaskInfoList(tasks)
+	taskInfoList := awsapi.NewEcsTaskInfoList(tasks)
 	containerInstanceArns := taskInfoList.ContainerInstanceArns()
 
 	if len(containerInstanceArns) > 0 {
-		containerInstances, err := client.GetECSContainerInstances(cluster, containerInstanceArns)
+		containerInstances, err := client.GetEcsContainerInstances(cluster, containerInstanceArns)
 		if err != nil {
-			return xerrors.Errorf("GetECSContainerInstances: %w", err)
+			return xerrors.Errorf("GetEcsContainerInstances: %w", err)
 		}
 
 		taskInfoList.SetContainerInstances(containerInstances)
 
-		instances, err := client.GetEC2Instances(taskInfoList.EC2InstanceIds())
+		instances, err := client.GetEc2Instances(taskInfoList.Ec2InstanceIds())
 		if err != nil {
 			return err
 		}
 
-		taskInfoList.SetEC2Instances(instances)
+		taskInfoList.SetEc2Instances(instances)
 	}
 
 	sort.Sort(taskInfoList)

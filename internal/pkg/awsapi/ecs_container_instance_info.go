@@ -8,14 +8,14 @@ import (
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
 )
 
-// ECSContainerInstanceInfo represents ...
-type ECSContainerInstanceInfo struct {
+// EcsContainerInstanceInfo represents ...
+type EcsContainerInstanceInfo struct {
 	ContainerInstance ecs.ContainerInstance
 	Ec2Instance       ec2.Instance
 }
 
 // MemoryAvailable returns remaining cpu available
-func (info ECSContainerInstanceInfo) MemoryAvailable() *int64 {
+func (info EcsContainerInstanceInfo) MemoryAvailable() *int64 {
 	for _, r := range info.ContainerInstance.RemainingResources {
 		if *r.Name == "MEMORY" {
 			return r.IntegerValue
@@ -25,7 +25,7 @@ func (info ECSContainerInstanceInfo) MemoryAvailable() *int64 {
 }
 
 // CPUAvailable returns remaining cpu available
-func (info ECSContainerInstanceInfo) CPUAvailable() *int64 {
+func (info EcsContainerInstanceInfo) CPUAvailable() *int64 {
 	for _, r := range info.ContainerInstance.RemainingResources {
 		if *r.Name == "CPU" {
 			return r.IntegerValue
@@ -35,23 +35,23 @@ func (info ECSContainerInstanceInfo) CPUAvailable() *int64 {
 }
 
 // ShortContainerInstanceArn return short container instance arn
-func (info ECSContainerInstanceInfo) ShortContainerInstanceArn() string {
+func (info EcsContainerInstanceInfo) ShortContainerInstanceArn() string {
 	return ShortArn(*info.ContainerInstance.ContainerInstanceArn)
 }
 
 // DockerVersion returns docker version
-func (info ECSContainerInstanceInfo) DockerVersion() string {
+func (info EcsContainerInstanceInfo) DockerVersion() string {
 	return strings.Replace(*info.ContainerInstance.VersionInfo.DockerVersion, "DockerVersion: ", "", -1)
 }
 
-// ECSContainerInstanceInfoList slice
-type ECSContainerInstanceInfoList []*ECSContainerInstanceInfo
+// EcsContainerInstanceInfoList slice
+type EcsContainerInstanceInfoList []*EcsContainerInstanceInfo
 
-// NewECSContainerInstanceInfoList constructor
-func NewECSContainerInstanceInfoList(containerInstances []ecs.ContainerInstance) ECSContainerInstanceInfoList {
-	var list ECSContainerInstanceInfoList
+// NewEcsContainerInstanceInfoList constructor
+func NewEcsContainerInstanceInfoList(containerInstances []ecs.ContainerInstance) EcsContainerInstanceInfoList {
+	var list EcsContainerInstanceInfoList
 	for _, c := range containerInstances {
-		list = append(list, &ECSContainerInstanceInfo{
+		list = append(list, &EcsContainerInstanceInfo{
 			ContainerInstance: c,
 		})
 	}
@@ -59,7 +59,7 @@ func NewECSContainerInstanceInfoList(containerInstances []ecs.ContainerInstance)
 }
 
 // Ec2InstanceIds returns
-func (cList ECSContainerInstanceInfoList) Ec2InstanceIds() []string {
+func (cList EcsContainerInstanceInfoList) Ec2InstanceIds() []string {
 	var ids []string
 	for _, c := range cList {
 		ids = append(ids, *c.ContainerInstance.Ec2InstanceId)
@@ -67,8 +67,8 @@ func (cList ECSContainerInstanceInfoList) Ec2InstanceIds() []string {
 	return sliceutil.DistinctSlice(ids)
 }
 
-// SetEC2Instances ...
-func (cList ECSContainerInstanceInfoList) SetEC2Instances(ec2Instances []ec2.Instance) {
+// SetEc2Instances ...
+func (cList EcsContainerInstanceInfoList) SetEc2Instances(ec2Instances []ec2.Instance) {
 	for _, c := range cList {
 		for _, i := range ec2Instances {
 			if *i.InstanceId == *c.ContainerInstance.Ec2InstanceId {

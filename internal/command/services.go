@@ -18,7 +18,7 @@ func NewCmdServices() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			clusters, err := client.GetAllECSClusters()
+			clusters, err := client.GetAllEcsClusters()
 			if err != nil {
 				return err
 			}

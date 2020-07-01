@@ -6,13 +6,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
-// GetEC2Instances to describe instances
-func (client Client) GetEC2Instances(instanceIds []string) ([]ec2.Instance, error) {
+// GetEc2Instances to describe instances
+func (client Client) GetEc2Instances(instanceIds []string) ([]ec2.Instance, error) {
 	input := &ec2.DescribeInstancesInput{
 		InstanceIds: instanceIds,
 	}
 
-	req := client.EC2Client.DescribeInstancesRequest(input)
+	req := client.Ec2Client.DescribeInstancesRequest(input)
 	result, err := req.Send(context.Background())
 	if err != nil {
 		return nil, err

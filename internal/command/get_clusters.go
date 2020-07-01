@@ -29,7 +29,7 @@ func runGetClustersCmd() error {
 }
 
 func runGetClusters(client *awsapi.Client) error {
-	clusters, err := client.GetAllECSClusters()
+	clusters, err := client.GetAllEcsClusters()
 	if err != nil {
 		return err
 	}

@@ -27,7 +27,7 @@ func runGetInstancesCmd(clusterName string) error {
 	if err != nil {
 		return err
 	}
-	cluster, err := client.GetECSCluster(clusterName)
+	cluster, err := client.GetEcsCluster(clusterName)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func runGetInstancesCmd(clusterName string) error {
 }
 
 func runGetInstances(client *awsapi.Client, cluster *ecs.Cluster) error {
-	containerInstances, err := client.GetAllECSContainerInstances(cluster)
+	containerInstances, err := client.GetAllEcsContainerInstances(cluster)
 	if err != nil {
 		return err
 	}
@@ -45,14 +45,14 @@ func runGetInstances(client *awsapi.Client, cluster *ecs.Cluster) error {
 		return nil
 	}
 
-	cList := awsapi.NewECSContainerInstanceInfoList(containerInstances)
+	cList := awsapi.NewEcsContainerInstanceInfoList(containerInstances)
 
-	ec2Instances, err := client.GetEC2Instances(cList.Ec2InstanceIds())
+	ec2Instances, err := client.GetEc2Instances(cList.Ec2InstanceIds())
 	if err != nil {
 		return err
 	}
 
-	cList.SetEC2Instances(ec2Instances)
+	cList.SetEc2Instances(ec2Instances)
 
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 1, '\t', 0)

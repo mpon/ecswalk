@@ -32,7 +32,7 @@ func runGetServicesCmd(clusterName string) error {
 		return err
 	}
 
-	cluster, err := client.GetECSCluster(clusterName)
+	cluster, err := client.GetEcsCluster(clusterName)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func runGetServicesCmd(clusterName string) error {
 }
 
 func runGetServices(client *awsapi.Client, cluster *ecs.Cluster) error {
-	services, err := client.GetAllECSServices(cluster)
+	services, err := client.GetAllEcsServices(cluster)
 	if err != nil {
 		return nil
 	}
@@ -51,12 +51,12 @@ func runGetServices(client *awsapi.Client, cluster *ecs.Cluster) error {
 		return nil
 	}
 
-	taskDefinitions, err := client.GetECSTaskDefinitions(cluster, services)
+	taskDefinitions, err := client.GetEcsTaskDefinitions(cluster, services)
 	if err != nil {
 		return err
 	}
 
-	ecsServiceInfoList := awsapi.NewECSServiceInfoList(services, taskDefinitions)
+	ecsServiceInfoList := awsapi.NewEcsServiceInfoList(services, taskDefinitions)
 
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 1, '\t', 0)

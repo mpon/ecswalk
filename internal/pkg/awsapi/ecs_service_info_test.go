@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 )
 
-func TestECSServiceInfoRreturnsNewECSServiceInfoList(t *testing.T) {
+func TestEcsServiceInfoRreturnsNewEcsServiceInfoList(t *testing.T) {
 	services := []ecs.Service{
 		{
 			ServiceName:    aws.String("name999"),
@@ -31,7 +31,7 @@ func TestECSServiceInfoRreturnsNewECSServiceInfoList(t *testing.T) {
 		},
 	}
 
-	sut := NewECSServiceInfoList(services, taskDefinitions)
+	sut := NewEcsServiceInfoList(services, taskDefinitions)
 
 	if len(sut) != 2 {
 		t.Fatalf("Failed New List %d", len(sut))
@@ -45,10 +45,10 @@ func TestECSServiceInfoRreturnsNewECSServiceInfoList(t *testing.T) {
 	}
 }
 
-func TestECSServiceInfoSortByNameAsc(t *testing.T) {
+func TestEcsServiceInfoSortByNameAsc(t *testing.T) {
 
-	info := func(index int64) ECSServiceInfo {
-		return ECSServiceInfo{
+	info := func(index int64) EcsServiceInfo {
+		return EcsServiceInfo{
 			Service: ecs.Service{
 				ServiceName: aws.String(fmt.Sprintf("A%d", index)),
 			},
@@ -56,7 +56,7 @@ func TestECSServiceInfoSortByNameAsc(t *testing.T) {
 		}
 	}
 
-	list := ECSServiceInfoList{}
+	list := EcsServiceInfoList{}
 
 	for i := 3; i > 0; i-- {
 		list = append(list, info(int64(i)))
@@ -73,8 +73,8 @@ func TestECSServiceInfoSortByNameAsc(t *testing.T) {
 
 }
 
-func TestECSServiceInfoReturnsTaskDefinitionArn(t *testing.T) {
-	info := ECSServiceInfo{
+func TestEcsServiceInfoReturnsTaskDefinitionArn(t *testing.T) {
+	info := EcsServiceInfo{
 		Service: ecs.Service{},
 		TaskDefinition: ecs.TaskDefinition{
 			TaskDefinitionArn: aws.String("arn:aws:ecs:ap-northeast-1:123456789012:task-definition/image:999"),
@@ -89,8 +89,8 @@ func TestECSServiceInfoReturnsTaskDefinitionArn(t *testing.T) {
 	}
 }
 
-func TestECSServiceInfoRreturnsDockerImageInfo(t *testing.T) {
-	info := ECSServiceInfo{
+func TestEcsServiceInfoRreturnsDockerImageInfo(t *testing.T) {
+	info := EcsServiceInfo{
 		Service: ecs.Service{},
 		TaskDefinition: ecs.TaskDefinition{
 			ContainerDefinitions: []ecs.ContainerDefinition{
@@ -115,8 +115,8 @@ func TestECSServiceInfoRreturnsDockerImageInfo(t *testing.T) {
 	}
 }
 
-func TestECSServiceInfoRreturnsMultipleDockerImageInfo(t *testing.T) {
-	info := ECSServiceInfo{
+func TestEcsServiceInfoRreturnsMultipleDockerImageInfo(t *testing.T) {
+	info := EcsServiceInfo{
 		Service: ecs.Service{},
 		TaskDefinition: ecs.TaskDefinition{
 			ContainerDefinitions: []ecs.ContainerDefinition{

@@ -11,8 +11,8 @@ import (
 
 func TestGetTaskRowSortByTaskIdAsc(t *testing.T) {
 
-	info := func(index int64) ECSTaskInfo {
-		return ECSTaskInfo{
+	info := func(index int64) EcsTaskInfo {
+		return EcsTaskInfo{
 			Task: ecs.Task{
 				TaskArn:           aws.String(fmt.Sprintf("A%d", index)),
 				TaskDefinitionArn: aws.String(fmt.Sprintf("B%d", index)),
@@ -20,7 +20,7 @@ func TestGetTaskRowSortByTaskIdAsc(t *testing.T) {
 		}
 	}
 
-	tList := ECSTaskInfoList{}
+	tList := EcsTaskInfoList{}
 
 	for i := 3; i > 0; i-- {
 		x := info(int64(i))

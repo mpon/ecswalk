@@ -10,8 +10,8 @@ import (
 
 // Client provides each AWS client
 type Client struct {
-	EC2Client *ec2.Client
-	ECSClient *ecs.Client
+	Ec2Client *ec2.Client
+	EcsClient *ecs.Client
 }
 
 // NewClient is constructor
@@ -30,8 +30,8 @@ func NewClient() (*Client, error) {
 	}
 
 	c := &Client{
-		EC2Client: ec2.New(cfg),
-		ECSClient: ecs.New(cfg),
+		Ec2Client: ec2.New(cfg),
+		EcsClient: ecs.New(cfg),
 	}
 
 	return c, nil

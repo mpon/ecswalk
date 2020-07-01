@@ -7,19 +7,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 )
 
-// ECSServiceInfo represents ...
-type ECSServiceInfo struct {
+// EcsServiceInfo represents ...
+type EcsServiceInfo struct {
 	Service        ecs.Service
 	TaskDefinition ecs.TaskDefinition
 }
 
 // TaskDefinitionArn return ECS task definition short ARN
-func (s ECSServiceInfo) TaskDefinitionArn() string {
+func (s EcsServiceInfo) TaskDefinitionArn() string {
 	return ShortArn(*s.TaskDefinition.TaskDefinitionArn)
 }
 
 // DockerImageName return docker image name
-func (s ECSServiceInfo) DockerImageName() string {
+func (s EcsServiceInfo) DockerImageName() string {
 	var names []string
 	for _, c := range s.TaskDefinition.ContainerDefinitions {
 		image, _ := ShortDockerImage(*c.Image)
@@ -29,7 +29,7 @@ func (s ECSServiceInfo) DockerImageName() string {
 }
 
 // DockerImageTag return docker image tag
-func (s ECSServiceInfo) DockerImageTag() string {
+func (s EcsServiceInfo) DockerImageTag() string {
 	var tags []string
 	for _, c := range s.TaskDefinition.ContainerDefinitions {
 		_, tag := ShortDockerImage(*c.Image)
@@ -38,28 +38,28 @@ func (s ECSServiceInfo) DockerImageTag() string {
 	return strings.Join(tags, ",")
 }
 
-// ECSServiceInfoList slice
-type ECSServiceInfoList []ECSServiceInfo
+// EcsServiceInfoList slice
+type EcsServiceInfoList []EcsServiceInfo
 
-func (s ECSServiceInfoList) Len() int {
+func (s EcsServiceInfoList) Len() int {
 	return len(s)
 }
 
-func (s ECSServiceInfoList) Swap(i, j int) {
+func (s EcsServiceInfoList) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-func (s ECSServiceInfoList) Less(i, j int) bool {
+func (s EcsServiceInfoList) Less(i, j int) bool {
 	return *s[i].Service.ServiceName < *s[j].Service.ServiceName
 }
 
-// NewECSServiceInfoList create ECS service infomation list
-func NewECSServiceInfoList(services []ecs.Service, taskDefinitions []ecs.TaskDefinition) ECSServiceInfoList {
-	list := ECSServiceInfoList{}
+// NewEcsServiceInfoList create ECS service infomation list
+func NewEcsServiceInfoList(services []ecs.Service, taskDefinitions []ecs.TaskDefinition) EcsServiceInfoList {
+	list := EcsServiceInfoList{}
 
 	for _, s := range services {
 		td := findTaskDefinition(s, taskDefinitions)
-		list = append(list, ECSServiceInfo{
+		list = append(list, EcsServiceInfo{
 			Service:        s,
 			TaskDefinition: *td,
 		})
