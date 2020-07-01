@@ -1,11 +1,7 @@
 package awsapi
 
 import (
-	"reflect"
 	"testing"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ecs"
 )
 
 func TestShortArn(t *testing.T) {
@@ -55,43 +51,5 @@ func TestShortDockerImageWithoutTag(t *testing.T) {
 
 	if resultTag != expectTag {
 		t.Fatalf("expect %s\nbut %s", expectTag, resultTag)
-	}
-}
-
-func TestFindService(t *testing.T) {
-	taskDefinition := "arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:8"
-	services := []ecs.Service{
-		{
-			TaskDefinition: aws.String(taskDefinition),
-		},
-		{
-			TaskDefinition: aws.String("arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:9"),
-		},
-	}
-
-	expect := services[0]
-	result := FindService(services, taskDefinition)
-
-	if !reflect.DeepEqual(result, expect) {
-		t.Fatalf("expect %#v\nbut %#v", expect, result)
-	}
-}
-
-func TestFindServiceNothing(t *testing.T) {
-	taskDefinition := "arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:8"
-	services := []ecs.Service{
-		{
-			TaskDefinition: aws.String("arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:7"),
-		},
-		{
-			TaskDefinition: aws.String("arn:aws:ecs:us-east-1:123456789012:task-definition/hello_world:9"),
-		},
-	}
-
-	expect := ecs.Service{}
-	result := FindService(services, taskDefinition)
-
-	if !reflect.DeepEqual(result, expect) {
-		t.Fatalf("expect %#v\nbut %#v", expect, result)
 	}
 }

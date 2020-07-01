@@ -2,8 +2,6 @@ package awsapi
 
 import (
 	"strings"
-
-	"github.com/aws/aws-sdk-go-v2/service/ecs"
 )
 
 // ShortArn returns last splited part by slash
@@ -24,14 +22,4 @@ func ShortDockerImage(image string) (string, string) {
 		return names[0], ""
 	}
 	return names[0], names[1]
-}
-
-// FindService to find service by task definition
-func FindService(services []ecs.Service, taskDefinition string) ecs.Service {
-	for _, service := range services {
-		if *service.TaskDefinition == taskDefinition {
-			return service
-		}
-	}
-	return ecs.Service{}
 }

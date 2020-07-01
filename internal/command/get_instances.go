@@ -31,7 +31,10 @@ func runGetInstancesCmd(clusterName string) error {
 	if err != nil {
 		return err
 	}
-	return runGetInstances(client, cluster)
+	if err := runGetInstances(client, cluster); err != nil {
+		return err
+	}
+	return nil
 }
 
 func runGetInstances(client *awsapi.Client, cluster *ecs.Cluster) error {

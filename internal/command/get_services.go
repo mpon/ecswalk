@@ -37,7 +37,10 @@ func runGetServicesCmd(clusterName string) error {
 		return err
 	}
 
-	return runGetServices(client, cluster)
+	if err := runGetServices(client, cluster); err != nil {
+		return err
+	}
+	return nil
 }
 
 func runGetServices(client *awsapi.Client, cluster *ecs.Cluster) error {

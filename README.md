@@ -70,5 +70,5 @@ You can create by terraform [github.com/mpon/infra/ecswalk_test](https://github.
 
 - [x] List ECS services
 - [x] List ECS tasks
-- [ ] List ECS container instances
+- [x] List ECS container instances
 - [ ] List ECS services and fuzzy find

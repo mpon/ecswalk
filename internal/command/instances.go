@@ -34,7 +34,10 @@ func NewCmdInstances() *cobra.Command {
 				return nil
 			}
 
-			return runGetInstances(client, cluster)
+			if err := runGetInstances(client, cluster); err != nil {
+				return err
+			}
+			return nil
 		},
 	}
 	return cmd

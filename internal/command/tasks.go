@@ -50,7 +50,9 @@ func NewCmdTasks() *cobra.Command {
 				return nil
 			}
 
-			runGetTasks(client, cluster, service)
+			if err := runGetTasks(client, cluster, service); err != nil {
+				return err
+			}
 			return nil
 		},
 	}

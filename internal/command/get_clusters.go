@@ -25,7 +25,10 @@ func runGetClustersCmd() error {
 	if err != nil {
 		return err
 	}
-	return runGetClusters(client)
+	if err := runGetClusters(client); err != nil {
+		return err
+	}
+	return nil
 }
 
 func runGetClusters(client *awsapi.Client) error {
