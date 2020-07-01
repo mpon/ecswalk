@@ -12,15 +12,15 @@ import (
 
 // NewCmdGetServices represents the get services command
 func NewCmdGetServices() *cobra.Command {
-	var getServicesCmdFlagCluster string
+	var clusterFlag string
 	cmd := &cobra.Command{
 		Use:   "services",
 		Short: "get all ECS services specified cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGetServicesCmd(getServicesCmdFlagCluster)
+			return runGetServicesCmd(clusterFlag)
 		},
 	}
-	cmd.Flags().StringVarP(&getServicesCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
+	cmd.Flags().StringVarP(&clusterFlag, "cluster", "c", "", "AWS ECS cluster")
 	cmd.MarkFlagRequired("cluster")
 
 	return cmd

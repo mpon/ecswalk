@@ -11,13 +11,14 @@ import (
 
 // NewCmdGetClusters represents the get cluster command
 func NewCmdGetClusters() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "clusters",
 		Short: "get ECS clusters",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runGetClustersCmd()
 		},
 	}
+	return cmd
 }
 
 func runGetClustersCmd() error {

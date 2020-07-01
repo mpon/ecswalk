@@ -12,14 +12,17 @@ import (
 
 // NewCmdGetInstances represents the get instances command
 func NewCmdGetInstances() *cobra.Command {
-	var getServicesCmdFlagCluster string
-	return &cobra.Command{
+	var clusterFlag string
+	cmd := &cobra.Command{
 		Use:   "instances",
 		Short: "get ECS container instances",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGetInstancesCmd(getServicesCmdFlagCluster)
+			return runGetInstancesCmd(clusterFlag)
 		},
 	}
+	cmd.Flags().StringVarP(&clusterFlag, "cluster", "c", "", "AWS ECS cluster")
+	cmd.MarkFlagRequired("cluster")
+	return cmd
 }
 
 func runGetInstancesCmd(clusterName string) error {

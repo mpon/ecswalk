@@ -14,18 +14,18 @@ import (
 
 // NewCmdGetTasks represents the get tasks command
 func NewCmdGetTasks() *cobra.Command {
-	var getTasksCmdFlagCluster string
-	var getTasksCmdFlagService string
+	var clusterFlag string
+	var serviceFlag string
 	cmd := &cobra.Command{
 		Use:   "tasks",
 		Short: "get Tasks specified service",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGetTasksCmd(getTasksCmdFlagCluster, getTasksCmdFlagService)
+			return runGetTasksCmd(clusterFlag, serviceFlag)
 		},
 	}
-	cmd.Flags().StringVarP(&getTasksCmdFlagCluster, "cluster", "c", "", "AWS ECS cluster")
+	cmd.Flags().StringVarP(&clusterFlag, "cluster", "c", "", "AWS ECS cluster")
 	cmd.MarkFlagRequired("cluster")
-	cmd.Flags().StringVarP(&getTasksCmdFlagService, "service", "s", "", "AWS ECS service")
+	cmd.Flags().StringVarP(&serviceFlag, "service", "s", "", "AWS ECS service")
 	cmd.MarkFlagRequired("service")
 
 	return cmd
