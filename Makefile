@@ -8,3 +8,5 @@ build:
 	go build -ldflags "$(LDFLAGS)" -o $(BIN) .
 test:
 	go test -v ./...
+lint:
+	golangci-lint run

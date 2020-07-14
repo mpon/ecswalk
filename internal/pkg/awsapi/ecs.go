@@ -109,9 +109,7 @@ func (client Client) describeAllEcsServices(cluster *ecs.Cluster) ([]*ecs.Descri
 	}
 	serviceArns := []string{}
 	for _, o := range outputs {
-		for _, arn := range o.ServiceArns {
-			serviceArns = append(serviceArns, arn)
-		}
+		serviceArns = append(serviceArns, o.ServiceArns...)
 	}
 
 	const maxAPILimitChunkSize = 10
@@ -155,7 +153,6 @@ func (client Client) describeTaskDefinition(taskDefinitionArn string) (*ecs.Desc
 }
 
 func (client Client) describeTaskDefinitions(cluster *ecs.Cluster, services []ecs.Service) ([]*ecs.DescribeTaskDefinitionOutput, error) {
-	const maxAPILimitChunkSize = 10
 	taskDefinitions := []string{}
 	outputs := []*ecs.DescribeTaskDefinitionOutput{}
 

@@ -12,7 +12,7 @@ import (
 func FindCluster(clusters []ecs.Cluster) (*ecs.Cluster, error) {
 	idx, err := fuzzyfinder.Find(clusters,
 		func(i int) string {
-			return fmt.Sprintf("%s", *clusters[i].ClusterName)
+			return *clusters[i].ClusterName
 		},
 		fuzzyfinder.WithPromptString("Select Cluster:"),
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
@@ -38,7 +38,7 @@ func FindService(services []ecs.Service) (*ecs.Service, error) {
 	idx, err := fuzzyfinder.Find(services,
 		func(i int) string {
 			s := services[i]
-			return fmt.Sprintf("%s", *s.ServiceName)
+			return *s.ServiceName
 		},
 		fuzzyfinder.WithPromptString("Select Service:"),
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {

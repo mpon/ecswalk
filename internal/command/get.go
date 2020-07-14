@@ -9,8 +9,8 @@ func NewCmdGet() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get",
 		Short: "Display one or many resources.",
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
 		},
 	}
 }

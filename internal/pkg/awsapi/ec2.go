@@ -21,9 +21,7 @@ func (client Client) GetEc2Instances(instanceIds []string) ([]ec2.Instance, erro
 	var instances []ec2.Instance
 
 	for _, r := range result.DescribeInstancesOutput.Reservations {
-		for _, i := range r.Instances {
-			instances = append(instances, i)
-		}
+		instances = append(instances, r.Instances...)
 	}
 	return instances, nil
 }

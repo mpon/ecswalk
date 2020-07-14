@@ -24,9 +24,9 @@ func NewCmdGetTasks() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&clusterFlag, "cluster", "c", "", "AWS ECS cluster")
-	cmd.MarkFlagRequired("cluster")
+	_ = cmd.MarkFlagRequired("cluster")
 	cmd.Flags().StringVarP(&serviceFlag, "service", "s", "", "AWS ECS service")
-	cmd.MarkFlagRequired("service")
+	_ = cmd.MarkFlagRequired("service")
 
 	return cmd
 }
