@@ -3,6 +3,7 @@ package awsapi
 import (
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/mpon/ecswalk/internal/pkg/sliceutil"
@@ -51,6 +52,9 @@ type EcsContainerInstanceInfoList []*EcsContainerInstanceInfo
 func NewEcsContainerInstanceInfoList(containerInstances []ecs.ContainerInstance) EcsContainerInstanceInfoList {
 	var list EcsContainerInstanceInfoList
 	for _, c := range containerInstances {
+		if c.VersionInfo == nil {
+			c.VersionInfo = &ecs.VersionInfo{}
+		}
 		list = append(list, &EcsContainerInstanceInfo{
 			ContainerInstance: c,
 		})
@@ -72,6 +76,9 @@ func (cList EcsContainerInstanceInfoList) SetEc2Instances(ec2Instances []ec2.Ins
 	for _, c := range cList {
 		for _, i := range ec2Instances {
 			if *i.InstanceId == *c.ContainerInstance.Ec2InstanceId {
+				if i.PrivateIpAddress == nil {
+					i.PrivateIpAddress = aws.String("")
+				}
 				c.Ec2Instance = i
 			}
 		}
