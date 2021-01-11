@@ -18,7 +18,7 @@ builds:
       - -s -w
       - -X main.Version={{ .Version }}
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
 archives:
   - format_overrides:
       - goos: windows
